@@ -17,6 +17,7 @@ import { AuthService } from '../auth/auth.service';
         <button class="rounded-xl p-3 border" (click)="goLogin()">Login</button>
         <button class="rounded-xl p-3 border" (click)="goRegister()">Register</button>
         <button class="rounded-xl p-3 border" (click)="logout()" [disabled]="!auth.isLoggedIn()">Logout</button>
+        <button class="rounded-xl p-3 border" (click)="goForgot()">Forgot</button>
       </div>
 
       <div class="mt-4 text-xs break-all" *ngIf="auth.getToken()">
@@ -39,4 +40,6 @@ export class HomeComponent {
   goLogin() { this.router.navigateByUrl('/login'); }
   goRegister() { this.router.navigateByUrl('/register'); }
   logout() { this.auth.logout(); this.router.navigateByUrl('/login'); }
+  goForgot() { this.router.navigateByUrl('/forgot-password'); }
+
 }

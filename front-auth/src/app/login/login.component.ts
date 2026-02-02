@@ -32,6 +32,9 @@ type ApiError = { code?: string; message?: string; timestamp?: string };
           <p *ngIf="error" class="text-sm text-red-600">{{ error }}</p>
 
           <a class="text-sm underline" routerLink="/register">Créer un compte</a>
+
+          <a class="text-sm underline" routerLink="/forgot-password">Mot de passe oublié ?</a>
+
         </div>
       </div>
     </div>

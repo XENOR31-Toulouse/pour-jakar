@@ -12,7 +12,11 @@ import com.omenaapp.auth_service.application.port.in.LoginUseCase;
 import com.omenaapp.auth_service.application.port.in.LogoutUseCase;
 import com.omenaapp.auth_service.application.port.in.RefreshUseCase;
 import com.omenaapp.auth_service.application.port.in.RegisterUserUseCase;
+import com.omenaapp.auth_service.application.port.in.RequestPasswordResetUseCase;
+import com.omenaapp.auth_service.application.port.in.ResetPasswordUseCase;
 import com.omenaapp.auth_service.application.port.out.PasswordHasherPort;
+import com.omenaapp.auth_service.application.port.out.PasswordResetNotifierPort;
+import com.omenaapp.auth_service.application.port.out.PasswordResetTokenRepositoryPort;
 import com.omenaapp.auth_service.application.port.out.RefreshTokenRepositoryPort;
 import com.omenaapp.auth_service.application.port.out.TokenHasherPort;
 import com.omenaapp.auth_service.application.port.out.TokenIssuerPort;
@@ -20,7 +24,13 @@ import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
 import com.omenaapp.auth_service.domain.User;
 
 @Service
-public class AuthService implements RegisterUserUseCase, LoginUseCase, RefreshUseCase, LogoutUseCase {
+public class AuthService implements
+        RegisterUserUseCase,
+        LoginUseCase,
+        RefreshUseCase,
+        LogoutUseCase,
+        RequestPasswordResetUseCase,
+        ResetPasswordUseCase {
 
     private final UserRepositoryPort users;
     private final PasswordHasherPort hasher;
@@ -29,7 +39,11 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase, RefreshUs
     private final RefreshTokenRepositoryPort refreshRepo;
     private final TokenHasherPort tokenHasher;
 
+    private final PasswordResetTokenRepositoryPort resetTokens;
+    private final PasswordResetNotifierPort resetNotifier;
+
     private final long refreshTtlSeconds;
+    private final long resetTtlSeconds;
 
     public AuthService(
             UserRepositoryPort users,
@@ -37,14 +51,22 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase, RefreshUs
             TokenIssuerPort tokenIssuer,
             RefreshTokenRepositoryPort refreshRepo,
             TokenHasherPort tokenHasher,
-            @Value("${security-refresh.ttl-seconds:604800}") long refreshTtlSeconds
+            PasswordResetTokenRepositoryPort resetTokens,
+            PasswordResetNotifierPort resetNotifier,
+            @Value("${security-refresh.ttl-seconds:604800}") long refreshTtlSeconds,
+            @Value("${security-reset.ttl-seconds:900}") long resetTtlSeconds
     ) {
         this.users = users;
         this.hasher = hasher;
         this.tokenIssuer = tokenIssuer;
         this.refreshRepo = refreshRepo;
         this.tokenHasher = tokenHasher;
+
+        this.resetTokens = resetTokens;
+        this.resetNotifier = resetNotifier;
+
         this.refreshTtlSeconds = refreshTtlSeconds;
+        this.resetTtlSeconds = resetTtlSeconds;
     }
 
     @Override
@@ -115,15 +137,12 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase, RefreshUs
         // rotation: révoquer l’ancien
         refreshRepo.revokeToken(existing.id(), now);
 
-        // émettre un nouvel access + refresh
-        // on a juste userId dans refresh token, donc on recharge le user pour claims
+        // recharger l'user pour re-créer les claims
         User user = users.findById(existing.userId())
                 .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
 
         var issued = issueTokens(user);
         return new RefreshUseCase.Result(issued.accessToken(), issued.refreshToken());
-        // -> On ajoute plutôt un port findById, plus propre.
-        // throw new RuntimeException("IMPLEMENT_FIND_BY_ID");
     }
 
     @Override
@@ -140,6 +159,72 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase, RefreshUs
         refreshRepo.findValidByTokenHash(hash, now)
                 .ifPresent(rt -> refreshRepo.revokeToken(rt.id(), now));
     }
+
+    // ---- Reset Password (Étape 4) ----
+
+    @Override
+    @Transactional
+    public void request(RequestPasswordResetUseCase.Command cmd) {
+        String email = normalizeEmail(cmd.email());
+        if (email.isEmpty()) return; // toujours OK
+
+        var userOpt = users.findByEmail(email);
+        if (userOpt.isEmpty()) return; // toujours OK (anti-enumeration)
+
+        var user = userOpt.get();
+
+        String rawToken = UUID.randomUUID().toString();
+        String tokenHash = tokenHasher.sha256(rawToken);
+
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(resetTtlSeconds);
+
+        resetTokens.save(new PasswordResetTokenRepositoryPort.ResetTokenRecord(
+                UUID.randomUUID(),
+                user.id(),
+                tokenHash,
+                exp,
+                null,
+                now
+        ));
+
+        // au début: console (ou faux email)
+        resetNotifier.sendResetLink(user.email(), rawToken);
+    }
+
+    @Override
+    @Transactional
+    public void reset(ResetPasswordUseCase.Command cmd) {
+        String raw = cmd.token() == null ? "" : cmd.token().trim();
+        String newPwd = cmd.newPassword() == null ? "" : cmd.newPassword();
+
+        if (raw.isEmpty()) throw new IllegalArgumentException("RESET_TOKEN_REQUIRED");
+        if (newPwd.length() < 8) throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+
+        Instant now = Instant.now();
+        String hash = tokenHasher.sha256(raw);
+
+        var token = resetTokens.findValidByTokenHash(hash, now)
+                .orElseThrow(() -> new IllegalArgumentException("RESET_TOKEN_INVALID"));
+
+        User user = users.findById(token.userId())
+                .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
+
+        String newHash = hasher.hash(newPwd);
+
+        // User immutable => re-save with new password hash
+        users.save(new User(
+                user.id(),
+                user.email(),
+                user.username(),
+                newHash,
+                user.createdAt()
+        ));
+
+        resetTokens.markUsed(token.id(), now);
+    }
+
+    // ---- Helpers ----
 
     private LoginUseCase.Result issueTokens(User user) {
         String access = tokenIssuer.issueAccessToken(

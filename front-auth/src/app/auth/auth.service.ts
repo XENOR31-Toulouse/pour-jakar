@@ -36,6 +36,15 @@ refresh() {
   );
 }
 
+requestPasswordReset(email: string) {
+  return this.http.post(`/api/auth/password/reset-request`, { email });
+}
+
+resetPassword(token: string, newPassword: string) {
+  return this.http.post(`/api/auth/password/reset`, { token, newPassword });
+}
+
+
 logout() {
   const rt = localStorage.getItem('refreshToken');
   localStorage.removeItem('accessToken');

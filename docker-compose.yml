@@ -23,6 +23,9 @@ services:
       JWT_SECRET: "change-me-please-change-me-please-32chars-min"
       JWT_ACCESS_TTL: 900
       JWT_ISSUER: "auth-service"
+      SMTP_USER: "axel.ibanez31000@gmail.com"
+      SMTP_PASS: "mdaa prcc rtog uovz"
+      MAIL_FROM: "axel.ibanez31000@gmail.com"
     ports:
       - "8081:8080" # host:container
     depends_on:
@@ -36,6 +39,8 @@ services:
       - "4200:80"
     depends_on:
       - auth-service
+
+
 
 volumes:
   auth_db_data:

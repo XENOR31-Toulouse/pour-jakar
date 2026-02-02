@@ -12,6 +12,8 @@ import com.omenaapp.auth_service.application.port.in.LoginUseCase;
 import com.omenaapp.auth_service.application.port.in.LogoutUseCase;
 import com.omenaapp.auth_service.application.port.in.RefreshUseCase;
 import com.omenaapp.auth_service.application.port.in.RegisterUserUseCase;
+import com.omenaapp.auth_service.application.port.in.RequestPasswordResetUseCase;
+import com.omenaapp.auth_service.application.port.in.ResetPasswordUseCase;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -23,12 +25,17 @@ public class AuthController {
   private final LoginUseCase login;
   private final RefreshUseCase refresh;
   private final LogoutUseCase logout;
+  private final RequestPasswordResetUseCase requestReset;
+  private final ResetPasswordUseCase resetPassword;
 
-  public AuthController(RegisterUserUseCase register, LoginUseCase login, RefreshUseCase refresh, LogoutUseCase logout) {
+  public AuthController(RegisterUserUseCase register, LoginUseCase login, RefreshUseCase refresh, LogoutUseCase logout,
+      RequestPasswordResetUseCase requestReset, ResetPasswordUseCase resetPassword) {
     this.register = register;
     this.login = login;
     this.refresh = refresh;
     this.logout = logout;
+    this.requestReset = requestReset;
+    this.resetPassword = resetPassword;
   }
 
   @PostMapping("/register")
@@ -55,6 +62,18 @@ public ResponseEntity<?> logout(@RequestBody RefreshRequest req) {
   return ResponseEntity.ok().build();
 }
 
+@PostMapping("/password/reset-request")
+  public ResponseEntity<?> requestReset(@RequestBody ResetRequestEmail req) {
+    requestReset.request(new RequestPasswordResetUseCase.Command(req.email));
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/password/reset")
+  public ResponseEntity<?> reset(@RequestBody ResetPasswordBody req) {
+    resetPassword.reset(new ResetPasswordUseCase.Command(req.token, req.newPassword));
+    return ResponseEntity.ok().build();
+  }
+
 public static class RefreshRequest {
   @NotBlank public String refreshToken;
 }
@@ -69,6 +88,15 @@ public static class RefreshRequest {
   public static class LoginRequest {
     @NotBlank public String identifier;
     @NotBlank public String password;
+  }
+
+  public static class ResetRequestEmail {
+    @NotBlank public String email;
+  }
+
+  public static class ResetPasswordBody {
+    @NotBlank public String token;
+    @NotBlank public String newPassword;
   }
 
   public record IdResponse(UUID userId) {}
