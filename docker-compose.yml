@@ -26,6 +26,7 @@ services:
       SMTP_USER: "axel.ibanez31000@gmail.com"
       SMTP_PASS: "mdaa prcc rtog uovz"
       MAIL_FROM: "axel.ibanez31000@gmail.com"
+      FRONT_BASE_URL: "http://localhost:4200"
     ports:
       - "8081:8080" # host:container
     depends_on:
