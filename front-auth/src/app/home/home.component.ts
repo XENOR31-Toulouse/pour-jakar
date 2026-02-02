@@ -23,6 +23,13 @@ import { AuthService } from '../auth/auth.service';
         <div class="font-semibold mb-1">Access token:</div>
         {{ auth.getToken() }}
       </div>
+
+      <div class="mt-4 text-xs break-all" *ngIf="auth.getRefreshToken()">
+        <div class="font-semibold mb-1">Refresh token:</div>
+        {{ auth.getRefreshToken() }}
+      </div>
+
+
     </div>
   </div>
   `

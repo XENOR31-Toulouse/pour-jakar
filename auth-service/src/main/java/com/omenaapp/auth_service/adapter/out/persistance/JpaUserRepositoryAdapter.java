@@ -1,6 +1,7 @@
 package com.omenaapp.auth_service.adapter.out.persistance;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +25,11 @@ public class JpaUserRepositoryAdapter implements UserRepositoryPort {
   @Override
   public Optional<User> findByUsername(String username) {
     return jpa.findByUsername(username).map(this::toDomain);
+  }
+
+  @Override
+  public Optional<User> findById(UUID id) {
+    return jpa.findById(id).map(this::toDomain);
   }
 
   @Override

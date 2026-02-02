@@ -4,7 +4,7 @@ import { tap } from 'rxjs';
 
 type RegisterRequest = { email: string; username: string; password: string };
 type LoginRequest = { identifier: string; password: string };
-type LoginResponse = { accessToken: string };
+type LoginResponse = { accessToken: string; refreshToken: string };
 type IdResponse = { userId: string };
 
 @Injectable({ providedIn: 'root' })
@@ -18,17 +18,38 @@ export class AuthService {
   }
 
   login(req: LoginRequest) {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, req).pipe(
-      tap(res => localStorage.setItem('accessToken', res.accessToken))
-    );
-  }
+  return this.http.post<LoginResponse>(`${this.baseUrl}/login`, req).pipe(
+    tap(res => {
+      localStorage.setItem('accessToken', res.accessToken);
+      localStorage.setItem('refreshToken', res.refreshToken);
+    })
+  );
+}
 
-  logout() {
-    localStorage.removeItem('accessToken');
-  }
+refresh() {
+  const rt = localStorage.getItem('refreshToken');
+  return this.http.post<LoginResponse>(`${this.baseUrl}/refresh`, { refreshToken: rt }).pipe(
+    tap(res => {
+      localStorage.setItem('accessToken', res.accessToken);
+      localStorage.setItem('refreshToken', res.refreshToken);
+    })
+  );
+}
+
+logout() {
+  const rt = localStorage.getItem('refreshToken');
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  // optionnel: notifier backend
+  return this.http.post(`${this.baseUrl}/logout`, { refreshToken: rt });
+}
 
   getToken(): string | null {
     return localStorage.getItem('accessToken');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
   }
 
   isLoggedIn(): boolean {

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.omenaapp.auth_service.application.port.in.LoginUseCase;
+import com.omenaapp.auth_service.application.port.in.LogoutUseCase;
+import com.omenaapp.auth_service.application.port.in.RefreshUseCase;
 import com.omenaapp.auth_service.application.port.in.RegisterUserUseCase;
 
 import jakarta.validation.constraints.NotBlank;
@@ -19,10 +21,14 @@ public class AuthController {
 
   private final RegisterUserUseCase register;
   private final LoginUseCase login;
+  private final RefreshUseCase refresh;
+  private final LogoutUseCase logout;
 
-  public AuthController(RegisterUserUseCase register, LoginUseCase login) {
+  public AuthController(RegisterUserUseCase register, LoginUseCase login, RefreshUseCase refresh, LogoutUseCase logout) {
     this.register = register;
     this.login = login;
+    this.refresh = refresh;
+    this.logout = logout;
   }
 
   @PostMapping("/register")
@@ -36,6 +42,23 @@ public class AuthController {
     var result = login.login(new LoginUseCase.Command(req.identifier, req.password));
     return ResponseEntity.ok(result); // { "accessToken": "..." }
   }
+
+  @PostMapping("/refresh")
+public ResponseEntity<?> refresh(@RequestBody RefreshRequest req) {
+  var result = refresh.refresh(new RefreshUseCase.Command(req.refreshToken));
+  return ResponseEntity.ok(result);
+}
+
+@PostMapping("/logout")
+public ResponseEntity<?> logout(@RequestBody RefreshRequest req) {
+  logout.logout(new LogoutUseCase.Command(req.refreshToken));
+  return ResponseEntity.ok().build();
+}
+
+public static class RefreshRequest {
+  @NotBlank public String refreshToken;
+}
+
 
   public static class RegisterRequest {
     @NotBlank public String email;
