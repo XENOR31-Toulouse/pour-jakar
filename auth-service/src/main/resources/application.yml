@@ -12,3 +12,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-me-please-change-me-please-32chars-min}
+    access-ttl-seconds: ${JWT_ACCESS_TTL:900}
+    issuer: ${JWT_ISSUER:auth-service}

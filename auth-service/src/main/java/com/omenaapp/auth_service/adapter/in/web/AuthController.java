@@ -26,15 +26,15 @@ public class AuthController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<IdResponse> register(@RequestBody RegisterRequest req) {
+  public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
     UUID id = register.register(new RegisterUserUseCase.Command(req.email, req.username, req.password));
     return ResponseEntity.ok(new IdResponse(id));
   }
 
   @PostMapping("/login")
-  public ResponseEntity<IdResponse> login(@RequestBody LoginRequest req) {
-    UUID id = login.login(new LoginUseCase.Command(req.identifier, req.password));
-    return ResponseEntity.ok(new IdResponse(id));
+  public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+    var result = login.login(new LoginUseCase.Command(req.identifier, req.password));
+    return ResponseEntity.ok(result); // { "accessToken": "..." }
   }
 
   public static class RegisterRequest {
@@ -44,7 +44,7 @@ public class AuthController {
   }
 
   public static class LoginRequest {
-    @NotBlank public String identifier; // email ou username
+    @NotBlank public String identifier;
     @NotBlank public String password;
   }
 

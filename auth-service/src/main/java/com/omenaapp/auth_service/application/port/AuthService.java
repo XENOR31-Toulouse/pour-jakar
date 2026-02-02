@@ -1,6 +1,7 @@
 package com.omenaapp.auth_service.application.port;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -9,18 +10,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.omenaapp.auth_service.application.port.in.LoginUseCase;
 import com.omenaapp.auth_service.application.port.in.RegisterUserUseCase;
 import com.omenaapp.auth_service.application.port.out.PasswordHasherPort;
+import com.omenaapp.auth_service.application.port.out.TokenIssuerPort;
 import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
 import com.omenaapp.auth_service.domain.User;
+
 
 @Service
 public class AuthService implements RegisterUserUseCase, LoginUseCase {
 
   private final UserRepositoryPort users;
   private final PasswordHasherPort hasher;
+  private final TokenIssuerPort tokenIssuer;
 
-  public AuthService(UserRepositoryPort users, PasswordHasherPort hasher) {
+  public AuthService(UserRepositoryPort users, PasswordHasherPort hasher, TokenIssuerPort tokenIssuer) {
     this.users = users;
     this.hasher = hasher;
+    this.tokenIssuer = tokenIssuer;
   }
 
   @Override
@@ -45,7 +50,7 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase {
   }
 
   @Override
-  public UUID login(LoginUseCase.Command cmd) {
+  public LoginUseCase.Result login(LoginUseCase.Command cmd) {
     String identifier = cmd.identifier() == null ? "" : cmd.identifier().trim();
     String password = cmd.password() == null ? "" : cmd.password();
 
@@ -59,7 +64,12 @@ public class AuthService implements RegisterUserUseCase, LoginUseCase {
     if (!hasher.matches(password, user.passwordHash()))
       throw new IllegalArgumentException("INVALID_CREDENTIALS");
 
-    return user.id();
+    String token = tokenIssuer.issueAccessToken(
+        user.id(),
+        Map.of("email", user.email(), "username", user.username())
+    );
+
+    return new LoginUseCase.Result(token);
   }
 
   private static String normalizeEmail(String email) {
