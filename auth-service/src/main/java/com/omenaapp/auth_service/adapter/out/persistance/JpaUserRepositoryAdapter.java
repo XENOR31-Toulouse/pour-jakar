@@ -37,11 +37,25 @@ public class JpaUserRepositoryAdapter implements UserRepositoryPort {
     jpa.save(toEntity(user));
   }
 
-  private User toDomain(UserEntity e) {
-    return new User(e.getId(), e.getEmail(), e.getUsername(), e.getPasswordHash(), e.getCreatedAt());
-  }
+private User toDomain(UserEntity e) {
+  return new User(
+      e.getId(),
+      e.getEmail(),
+      e.getUsername(),
+      e.getPasswordHash(),
+      e.getCreatedAt(),
+      e.isAdmin()
+  );
+}
 
-  private UserEntity toEntity(User u) {
-    return new UserEntity(u.id(), u.email(), u.username(), u.passwordHash(), u.createdAt());
-  }
+private UserEntity toEntity(User u) {
+  return new UserEntity(
+      u.id(),
+      u.email(),
+      u.username(),
+      u.passwordHash(),
+      u.createdAt(),
+      u.isAdmin()
+  );
+}
 }

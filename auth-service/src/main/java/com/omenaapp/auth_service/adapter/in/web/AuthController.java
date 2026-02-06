@@ -3,6 +3,7 @@ package com.omenaapp.auth_service.adapter.in.web;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,13 @@ public class AuthController {
     this.requestReset = requestReset;
     this.resetPassword = resetPassword;
   }
+
+  @RestController
+@RequestMapping("/admin")
+public class AdminController {
+  @GetMapping("/ping") public String ping() { return "ADMIN OK"; }
+}
+
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequest req) {

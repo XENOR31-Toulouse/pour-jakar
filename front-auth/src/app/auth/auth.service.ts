@@ -64,4 +64,18 @@ logout() {
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
+
+  getRole(): string | null {
+  const token = this.getToken();
+  if (!token) return null;
+
+  try {
+    const payloadPart = token.split('.')[1];
+    const payloadJson = atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(payloadJson);
+    return payload?.role ?? null;
+  } catch {
+    return null;
+  }
+}
 }

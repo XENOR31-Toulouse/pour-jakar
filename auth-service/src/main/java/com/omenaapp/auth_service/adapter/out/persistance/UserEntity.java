@@ -32,19 +32,24 @@ public class UserEntity {
   @Column(nullable=false)
   private Instant createdAt;
 
+  @Column(nullable=false)
+private boolean isAdmin;
+
   protected UserEntity() {}
 
-  public UserEntity(UUID id, String email, String username, String passwordHash, Instant createdAt) {
-    this.id = id;
-    this.email = email;
-    this.username = username;
-    this.passwordHash = passwordHash;
-    this.createdAt = createdAt;
-  }
+public UserEntity(UUID id, String email, String username, String passwordHash, Instant createdAt, boolean isAdmin) {
+  this.id = id;
+  this.email = email;
+  this.username = username;
+  this.passwordHash = passwordHash;
+  this.createdAt = createdAt;
+  this.isAdmin = isAdmin;
+}
 
   public UUID getId() { return id; }
   public String getEmail() { return email; }
   public String getUsername() { return username; }
   public String getPasswordHash() { return passwordHash; }
   public Instant getCreatedAt() { return createdAt; }
+  public boolean isAdmin() { return isAdmin; }
 }

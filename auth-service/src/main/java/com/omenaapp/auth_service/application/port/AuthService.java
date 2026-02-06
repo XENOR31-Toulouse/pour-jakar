@@ -59,6 +59,7 @@ public class AuthService implements
         this.users = users;
         this.hasher = hasher;
         this.tokenIssuer = tokenIssuer;
+
         this.refreshRepo = refreshRepo;
         this.tokenHasher = tokenHasher;
 
@@ -76,27 +77,18 @@ public class AuthService implements
         String username = cmd.username() == null ? "" : cmd.username().trim();
         String password = cmd.password() == null ? "" : cmd.password();
 
-        if (!email.contains("@")) {
-            throw new IllegalArgumentException("INVALID_EMAIL");
-        }
-        if (username.length() < 3) {
-            throw new IllegalArgumentException("USERNAME_TOO_SHORT");
-        }
-        if (password.length() < 8) {
-            throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
-        }
+        if (!email.contains("@")) throw new IllegalArgumentException("INVALID_EMAIL");
+        if (username.length() < 3) throw new IllegalArgumentException("USERNAME_TOO_SHORT");
+        if (password.length() < 8) throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
 
-        if (users.findByEmail(email).isPresent()) {
-            throw new IllegalStateException("EMAIL_ALREADY_USED");
-        }
-        if (users.findByUsername(username).isPresent()) {
-            throw new IllegalStateException("USERNAME_ALREADY_USED");
-        }
+        if (users.findByEmail(email).isPresent()) throw new IllegalStateException("EMAIL_ALREADY_USED");
+        if (users.findByUsername(username).isPresent()) throw new IllegalStateException("USERNAME_ALREADY_USED");
 
         UUID id = UUID.randomUUID();
         String hash = hasher.hash(password);
 
-        users.save(new User(id, email, username, hash, Instant.now()));
+        // ✅ par défaut : pas admin
+        users.save(new User(id, email, username, hash, Instant.now(), false));
         return id;
     }
 
@@ -124,9 +116,7 @@ public class AuthService implements
     @Transactional
     public RefreshUseCase.Result refresh(RefreshUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
-        if (rawRefresh.isEmpty()) {
-            throw new IllegalArgumentException("REFRESH_REQUIRED");
-        }
+        if (rawRefresh.isEmpty()) throw new IllegalArgumentException("REFRESH_REQUIRED");
 
         Instant now = Instant.now();
         String hash = tokenHasher.sha256(rawRefresh);
@@ -134,10 +124,8 @@ public class AuthService implements
         var existing = refreshRepo.findValidByTokenHash(hash, now)
                 .orElseThrow(() -> new IllegalArgumentException("REFRESH_INVALID"));
 
-        // rotation: révoquer l’ancien
         refreshRepo.revokeToken(existing.id(), now);
 
-        // recharger l'user pour re-créer les claims
         User user = users.findById(existing.userId())
                 .orElseThrow(() -> new IllegalArgumentException("USER_NOT_FOUND"));
 
@@ -149,9 +137,7 @@ public class AuthService implements
     @Transactional
     public void logout(LogoutUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
-        if (rawRefresh.isEmpty()) {
-            return;
-        }
+        if (rawRefresh.isEmpty()) return;
 
         Instant now = Instant.now();
         String hash = tokenHasher.sha256(rawRefresh);
@@ -160,16 +146,16 @@ public class AuthService implements
                 .ifPresent(rt -> refreshRepo.revokeToken(rt.id(), now));
     }
 
-    // ---- Reset Password (Étape 4) ----
+    // ---- Reset Password ----
 
     @Override
     @Transactional
     public void request(RequestPasswordResetUseCase.Command cmd) {
         String email = normalizeEmail(cmd.email());
-        if (email.isEmpty()) return; // toujours OK
+        if (email.isEmpty()) return;
 
         var userOpt = users.findByEmail(email);
-        if (userOpt.isEmpty()) return; // toujours OK (anti-enumeration)
+        if (userOpt.isEmpty()) return; // anti-enumeration
 
         var user = userOpt.get();
 
@@ -188,8 +174,12 @@ public class AuthService implements
                 now
         ));
 
-        // au début: console (ou faux email)
-        resetNotifier.sendResetLink(user.email(), rawToken);
+        // ✅ IMPORTANT: ne pas faire échouer l'API si l'email échoue
+        try {
+            resetNotifier.sendResetLink(user.email(), rawToken);
+        } catch (Exception ex) {
+            System.out.println("[RESET-PASSWORD] Email failed: " + ex.getMessage());
+        }
     }
 
     @Override
@@ -212,13 +202,14 @@ public class AuthService implements
 
         String newHash = hasher.hash(newPwd);
 
-        // User immutable => re-save with new password hash
+        // ✅ on garde email/username/isAdmin identiques, on change seulement passwordHash
         users.save(new User(
                 user.id(),
                 user.email(),
                 user.username(),
                 newHash,
-                user.createdAt()
+                user.createdAt(),
+                user.isAdmin()
         ));
 
         resetTokens.markUsed(token.id(), now);
@@ -227,9 +218,15 @@ public class AuthService implements
     // ---- Helpers ----
 
     private LoginUseCase.Result issueTokens(User user) {
+        String role = user.isAdmin() ? "ADMIN" : "USER"; // ✅ string
+
         String access = tokenIssuer.issueAccessToken(
                 user.id(),
-                Map.of("email", user.email(), "username", user.username())
+                Map.of(
+                        "email", user.email(),
+                        "username", user.username(),
+                        "role", role
+                )
         );
 
         String refreshRaw = UUID.randomUUID().toString();

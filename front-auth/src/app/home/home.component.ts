@@ -29,6 +29,8 @@ import { AuthService } from '../auth/auth.service';
         <div class="font-semibold mb-1">Refresh token:</div>
         {{ auth.getRefreshToken() }}
       </div>
+      <button class="rounded-xl p-3 border" (click)="goProtected()">Protected</button>
+
 
 
     </div>
@@ -41,5 +43,6 @@ export class HomeComponent {
   goRegister() { this.router.navigateByUrl('/register'); }
   logout() { this.auth.logout(); this.router.navigateByUrl('/login'); }
   goForgot() { this.router.navigateByUrl('/forgot-password'); }
+  goProtected() { this.router.navigateByUrl('/protected'); }
 
 }

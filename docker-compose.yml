@@ -2,11 +2,11 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: authdb
-      POSTGRES_USER: auth
-      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
 
@@ -15,20 +15,32 @@ services:
       context: ./auth-service
       dockerfile: src/main/resources/docker/Dockerfile
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: authdb
-      DB_USER: auth
-      DB_PASSWORD: auth
-      JWT_SECRET: "change-me-please-change-me-please-32chars-min"
-      JWT_ACCESS_TTL: 900
-      JWT_ISSUER: "auth-service"
-      SMTP_USER: "axel.ibanez31000@gmail.com"
-      SMTP_PASS: "mdaa prcc rtog uovz"
-      MAIL_FROM: "axel.ibanez31000@gmail.com"
-      FRONT_BASE_URL: "http://localhost:4200"
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL}
+      JWT_ISSUER: ${JWT_ISSUER}
+
+      REFRESH_TTL: ${REFRESH_TTL}
+      RESET_TTL: ${RESET_TTL}
+
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+
+      FRONT_BASE_URL: ${FRONT_BASE_URL}
+
+      SEED_ADMIN_ENABLED: ${SEED_ADMIN_ENABLED}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+
     ports:
-      - "8081:8080" # host:container
+      - "${AUTH_SERVICE_PORT}:8080"
     depends_on:
       - db
 
@@ -37,11 +49,9 @@ services:
       context: ./front-auth
       dockerfile: Dockerfile
     ports:
-      - "4200:80"
+      - "${FRONT_PORT}:80"
     depends_on:
       - auth-service
-
-
 
 volumes:
   auth_db_data:
