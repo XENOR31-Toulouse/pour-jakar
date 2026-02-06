@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.omenaapp.auth_service.application.port.in.AdminCreateUserUseCase;
 import com.omenaapp.auth_service.application.port.in.LoginUseCase;
 import com.omenaapp.auth_service.application.port.in.LogoutUseCase;
 import com.omenaapp.auth_service.application.port.in.RefreshUseCase;
@@ -30,7 +31,8 @@ public class AuthService implements
         RefreshUseCase,
         LogoutUseCase,
         RequestPasswordResetUseCase,
-        ResetPasswordUseCase {
+        ResetPasswordUseCase,
+        AdminCreateUserUseCase {
 
     private final UserRepositoryPort users;
     private final PasswordHasherPort hasher;
@@ -41,6 +43,7 @@ public class AuthService implements
 
     private final PasswordResetTokenRepositoryPort resetTokens;
     private final PasswordResetNotifierPort resetNotifier;
+    
 
     private final long refreshTtlSeconds;
     private final long resetTtlSeconds;
@@ -77,12 +80,22 @@ public class AuthService implements
         String username = cmd.username() == null ? "" : cmd.username().trim();
         String password = cmd.password() == null ? "" : cmd.password();
 
-        if (!email.contains("@")) throw new IllegalArgumentException("INVALID_EMAIL");
-        if (username.length() < 3) throw new IllegalArgumentException("USERNAME_TOO_SHORT");
-        if (password.length() < 8) throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("INVALID_EMAIL");
+        }
+        if (username.length() < 3) {
+            throw new IllegalArgumentException("USERNAME_TOO_SHORT");
+        }
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+        }
 
-        if (users.findByEmail(email).isPresent()) throw new IllegalStateException("EMAIL_ALREADY_USED");
-        if (users.findByUsername(username).isPresent()) throw new IllegalStateException("USERNAME_ALREADY_USED");
+        if (users.findByEmail(email).isPresent()) {
+            throw new IllegalStateException("EMAIL_ALREADY_USED");
+        }
+        if (users.findByUsername(username).isPresent()) {
+            throw new IllegalStateException("USERNAME_ALREADY_USED");
+        }
 
         UUID id = UUID.randomUUID();
         String hash = hasher.hash(password);
@@ -116,7 +129,9 @@ public class AuthService implements
     @Transactional
     public RefreshUseCase.Result refresh(RefreshUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
-        if (rawRefresh.isEmpty()) throw new IllegalArgumentException("REFRESH_REQUIRED");
+        if (rawRefresh.isEmpty()) {
+            throw new IllegalArgumentException("REFRESH_REQUIRED");
+        }
 
         Instant now = Instant.now();
         String hash = tokenHasher.sha256(rawRefresh);
@@ -137,7 +152,9 @@ public class AuthService implements
     @Transactional
     public void logout(LogoutUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
-        if (rawRefresh.isEmpty()) return;
+        if (rawRefresh.isEmpty()) {
+            return;
+        }
 
         Instant now = Instant.now();
         String hash = tokenHasher.sha256(rawRefresh);
@@ -147,16 +164,18 @@ public class AuthService implements
     }
 
     // ---- Reset Password ----
-
     @Override
     @Transactional
     public void request(RequestPasswordResetUseCase.Command cmd) {
         String email = normalizeEmail(cmd.email());
-        if (email.isEmpty()) return;
+        if (email.isEmpty()) {
+            return;
+        }
 
         var userOpt = users.findByEmail(email);
-        if (userOpt.isEmpty()) return; // anti-enumeration
-
+        if (userOpt.isEmpty()) {
+            return; // anti-enumeration
+        }
         var user = userOpt.get();
 
         String rawToken = UUID.randomUUID().toString();
@@ -184,12 +203,48 @@ public class AuthService implements
 
     @Override
     @Transactional
+    public UUID create(AdminCreateUserUseCase.Command cmd) {
+        String email = normalizeEmail(cmd.email());
+        String username = cmd.username() == null ? "" : cmd.username().trim();
+        String password = cmd.password() == null ? "" : cmd.password();
+
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("INVALID_EMAIL");
+        }
+        if (username.length() < 3) {
+            throw new IllegalArgumentException("USERNAME_TOO_SHORT");
+        }
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+        }
+
+        if (users.findByEmail(email).isPresent()) {
+            throw new IllegalStateException("EMAIL_ALREADY_USED");
+        }
+        if (users.findByUsername(username).isPresent()) {
+            throw new IllegalStateException("USERNAME_ALREADY_USED");
+        }
+
+        UUID id = UUID.randomUUID();
+        String hash = hasher.hash(password);
+
+        // ✅ user normal
+        users.save(new com.omenaapp.auth_service.domain.User(id, email, username, hash, java.time.Instant.now(), false));
+        return id;
+    }
+
+    @Override
+    @Transactional
     public void reset(ResetPasswordUseCase.Command cmd) {
         String raw = cmd.token() == null ? "" : cmd.token().trim();
         String newPwd = cmd.newPassword() == null ? "" : cmd.newPassword();
 
-        if (raw.isEmpty()) throw new IllegalArgumentException("RESET_TOKEN_REQUIRED");
-        if (newPwd.length() < 8) throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+        if (raw.isEmpty()) {
+            throw new IllegalArgumentException("RESET_TOKEN_REQUIRED");
+        }
+        if (newPwd.length() < 8) {
+            throw new IllegalArgumentException("PASSWORD_TOO_SHORT");
+        }
 
         Instant now = Instant.now();
         String hash = tokenHasher.sha256(raw);
@@ -216,7 +271,6 @@ public class AuthService implements
     }
 
     // ---- Helpers ----
-
     private LoginUseCase.Result issueTokens(User user) {
         String role = user.isAdmin() ? "ADMIN" : "USER"; // ✅ string
 
@@ -249,4 +303,5 @@ public class AuthService implements
     private static String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase();
     }
+
 }

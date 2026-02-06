@@ -44,6 +44,11 @@ resetPassword(token: string, newPassword: string) {
   return this.http.post(`/api/auth/password/reset`, { token, newPassword });
 }
 
+adminCreateUser(email: string, username: string, password: string) {
+  return this.http.post<{ userId: string }>(`/api/admin/users`, { email, username, password });
+}
+
+
 
 logout() {
   const rt = localStorage.getItem('refreshToken');
@@ -65,17 +70,17 @@ logout() {
     return !!this.getToken();
   }
 
-  getRole(): string | null {
+getRole(): string | null {
   const token = this.getToken();
   if (!token) return null;
-
   try {
     const payloadPart = token.split('.')[1];
     const payloadJson = atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'));
-    const payload = JSON.parse(payloadJson);
-    return payload?.role ?? null;
+    return JSON.parse(payloadJson)?.role ?? null;
   } catch {
     return null;
   }
 }
+
+
 }
