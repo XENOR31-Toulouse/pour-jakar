@@ -35,6 +35,14 @@ import { AuthService } from '../auth/auth.service';
         </div>
         <button class="rounded-xl p-3 border" (click)="goProtected()">Protected</button>
 
+        <button
+          class="rounded-xl p-3 border"
+          *ngIf="auth.getRole() === 'ADMIN'"
+          (click)="goAdminEmployees()"
+        >
+          Admin: Employés
+        </button>
+
         <div class="mt-4">
           <button
             class="rounded-xl p-3 border"
@@ -59,10 +67,12 @@ export class HomeComponent {
   goRegister() {
     this.router.navigateByUrl('/register');
   }
-  logout() {
-    this.auth.logout();
-    this.router.navigateByUrl('/login');
-  }
+logout() {
+  this.auth.logoutAndClear().subscribe({
+    next: () => this.router.navigateByUrl('/login'),
+    error: () => this.router.navigateByUrl('/login'), // even if backend fails
+  });
+}
   goForgot() {
     this.router.navigateByUrl('/forgot-password');
   }
@@ -71,5 +81,8 @@ export class HomeComponent {
   }
   goAdminCreate() {
     this.router.navigateByUrl('/admin/create-user');
+  }
+  goAdminEmployees() {
+    this.router.navigateByUrl('/admin/employees');
   }
 }

@@ -23,4 +23,12 @@ public class ApiExceptionHandler {
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(new ApiError("CONFLICT", ex.getMessage(), Instant.now()));
   }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiError> internalServerError(Exception ex) {
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(new ApiError("INTERNAL_SERVER_ERROR", "An unexpected error occurred", Instant.now()));
+  }
+
+  
 }

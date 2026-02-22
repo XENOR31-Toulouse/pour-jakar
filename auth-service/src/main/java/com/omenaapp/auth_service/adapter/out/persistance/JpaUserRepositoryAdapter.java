@@ -2,6 +2,7 @@ package com.omenaapp.auth_service.adapter.out.persistance;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
@@ -33,29 +34,41 @@ public class JpaUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   @Override
+  public List<User> findEmployees() {
+    return jpa.findByIsAdminFalse().stream()
+        .map(this::toDomain)
+        .toList();
+  }
+
+  @Override
+  public void deleteById(UUID id) {
+    jpa.deleteById(id);
+  }
+
+  @Override
   public void save(User user) {
     jpa.save(toEntity(user));
   }
 
-private User toDomain(UserEntity e) {
-  return new User(
-      e.getId(),
-      e.getEmail(),
-      e.getUsername(),
-      e.getPasswordHash(),
-      e.getCreatedAt(),
-      e.isAdmin()
-  );
-}
+  private User toDomain(UserEntity e) {
+    return new User(
+        e.getId(),
+        e.getEmail(),
+        e.getUsername(),
+        e.getPasswordHash(),
+        e.getCreatedAt(),
+        e.isAdmin()
+    );
+  }
 
-private UserEntity toEntity(User u) {
-  return new UserEntity(
-      u.id(),
-      u.email(),
-      u.username(),
-      u.passwordHash(),
-      u.createdAt(),
-      u.isAdmin()
-  );
-}
+  private UserEntity toEntity(User u) {
+    return new UserEntity(
+        u.id(),
+        u.email(),
+        u.username(),
+        u.passwordHash(),
+        u.createdAt(),
+        u.isAdmin()
+    );
+  }
 }

@@ -8,6 +8,7 @@ import { authGuard } from './auth/auth.guard';
 import { ProtectedComponent } from './protected/protected.component';
 import { AdminCreateUserComponent } from './admin-create-user/admin-create-user.component';
 import { roleGuard } from './auth/role.guard';
+import { AdminEmployeesComponent } from './admin-employees/admin-employees.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -19,6 +20,11 @@ export const routes: Routes = [
   {
     path: 'admin/create-user',
     component: AdminCreateUserComponent,
+    canActivate: [roleGuard(['ADMIN'])],
+  },
+  {
+    path: 'admin/employees',
+    component: AdminEmployeesComponent,
     canActivate: [roleGuard(['ADMIN'])],
   },
 

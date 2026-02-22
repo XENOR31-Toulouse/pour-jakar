@@ -6,10 +6,11 @@ type RegisterRequest = { email: string; username: string; password: string };
 type LoginRequest = { identifier: string; password: string };
 type LoginResponse = { accessToken: string; refreshToken: string };
 type IdResponse = { userId: string };
+type EmployeeDto = { id: string; email: string; username: string; createdAt: string };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = '/api/auth'; // PROXY NGINX => auth-service
+private readonly baseUrl = '/api/auth/auth';
 
   constructor(private http: HttpClient) {}
 
@@ -24,6 +25,20 @@ export class AuthService {
       localStorage.setItem('refreshToken', res.refreshToken);
     })
   );
+}
+
+
+
+adminListEmployees() {
+  return this.http.get<EmployeeDto[]>(`/api/auth/admin/users/employees`);
+}
+
+adminCreateEmployee(email: string, username: string, password: string) {
+  return this.http.post<{ userId: string }>(`/api/auth/admin/users/employees`, { email, username, password });
+}
+
+adminDeleteEmployee(id: string) {
+  return this.http.delete(`/api/auth/admin/users/employees/${id}`);
 }
 
 refresh() {
@@ -50,12 +65,15 @@ adminCreateUser(email: string, username: string, password: string) {
 
 
 
-logout() {
+logoutAndClear() {
   const rt = localStorage.getItem('refreshToken');
+
+  // clear immediately
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-  // optionnel: notifier backend
-  return this.http.post(`${this.baseUrl}/logout`, { refreshToken: rt });
+
+  // optional backend revoke (subscribe from caller)
+  return this.http.post(`/api/auth/logout`, { refreshToken: rt });
 }
 
   getToken(): string | null {

@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.omenaapp.auth_service.adapter.out.security.JwtService;
 
@@ -18,17 +17,13 @@ public class SecurityConfig {
       .csrf(csrf -> csrf.disable())
       .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .authorizeHttpRequests(auth -> auth
-        // endpoints publics (auth)
         .requestMatchers("/auth/**").permitAll()
-
-        // endpoints admin
         .requestMatchers("/admin/**").hasRole("ADMIN")
-
-        // tout le reste nécessite un JWT valide
         .anyRequest().authenticated()
       )
-      // 🔥 JWT filter
-      .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+      .addFilterBefore(new JwtAuthFilter(jwtService),
+          org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+      .anonymous(anon -> anon.disable()) // optional, but helps avoid “anonymous 403”
       .build();
   }
 }
