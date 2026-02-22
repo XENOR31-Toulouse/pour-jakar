@@ -51,9 +51,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  front-auth:
+  omena-web:
     build:
-      context: ./front-auth
+      context: ./omena-web
       dockerfile: Dockerfile
     ports:
       - "${FRONT_PORT}:80"
