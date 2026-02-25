@@ -13,4 +13,6 @@ public interface AssignmentRepo extends JpaRepository<AssignmentEntity, UUID> {
   List<AssignmentEntity> findByUserId(UUID userId);
   List<AssignmentEntity> findByWorksiteId(UUID worksiteId);
   void deleteByWorksiteIdAndUserId(UUID worksiteId, UUID userId);
+
+  boolean existsByWorksiteIdAndUserId(UUID worksiteId, UUID userId);
 }

@@ -10,6 +10,8 @@ import { AdminCreateUserComponent } from './admin-create-user/admin-create-user.
 import { roleGuard } from './auth/role.guard';
 import { AdminEmployeesComponent } from './admin-employees/admin-employees.component';
 import { AdminWorksitesComponent } from './admin-worksites/admin-worksites.component';
+import { WorksiteDetailComponent } from './worksite-detail/worksite-detail.component';
+import { MyWorksitesComponent } from './user-worksite/user-worksite.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -22,6 +24,10 @@ export const routes: Routes = [
     component: AdminWorksitesComponent,
     canActivate: [roleGuard(['ADMIN'])],
   },
+  { path: 'worksites/:id', component: WorksiteDetailComponent, canActivate: [authGuard] },
+  { path: 'my-worksites', component: MyWorksitesComponent, canActivate: [authGuard] },
+
+
 
   {
     path: 'admin/create-user',
