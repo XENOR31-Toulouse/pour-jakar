@@ -100,5 +100,18 @@ getRole(): string | null {
   }
 }
 
+getUserId(): string | null {
+  const token = this.getToken();
+  if (!token) return null;
+  try {
+    const payloadPart = token.split('.')[1];
+    const payloadJson = atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(payloadJson);
+    return payload?.sub ?? null; // JWT subject = userId
+  } catch {
+    return null;
+  }
+}
+
 
 }
