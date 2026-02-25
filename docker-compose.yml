@@ -51,6 +51,40 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  worksite-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${WORKSITE_DB}
+      POSTGRES_USER: ${WORKSITE_USER}
+      POSTGRES_PASSWORD: ${WORKSITE_PASSWORD}
+    ports:
+      - "${WORKSITE_DB_PORT}:5432"
+    volumes:
+      - worksite_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WORKSITE_USER} -d ${WORKSITE_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worksite-service:
+    build:
+      context: ./worksite-service
+      dockerfile: src/main/resources/docker/Dockerfile
+    environment:
+      DB_HOST: worksite-db
+      DB_PORT: 5432
+      DB_NAME: ${WORKSITE_DB}
+      DB_USER: ${WORKSITE_USER}
+      DB_PASSWORD: ${WORKSITE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${WORKSITE_SERVICE_PORT}:8080"
+    depends_on:
+      worksite-db:
+        condition: service_healthy
+    restart: unless-stopped
+
   omena-web:
     build:
       context: ./omena-web
@@ -62,3 +96,4 @@ services:
 
 volumes:
   auth_db_data:
+  worksite_db_data:
