@@ -1,154 +1,106 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { WorksiteService, Worksite, Assignment } from '../worksite/worksite.service';
+import { WorksiteService, Worksite, Assignment, TimelineItem } from '../worksite/worksite.service';
 import { AuthService } from '../auth/auth.service';
-import { TimelineItem } from '../worksite/worksite.service';
+import { forkJoin } from 'rxjs';
 
 type EmployeeDto = { id: string; email: string; username: string; createdAt: string };
 
 @Component({
   standalone: true,
+  selector: 'app-admin-worksites',
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
-    <div class="min-h-screen p-6">
-      <div class="max-w-5xl mx-auto rounded-2xl shadow p-6 bg-white">
-        <h1 class="text-2xl font-semibold mb-4">Admin — Chantiers</h1>
+    <div class="min-h-screen p-6 bg-gray-50">
+      <div class="max-w-7xl mx-auto rounded-2xl shadow-lg p-6 bg-white">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Admin — Gestion des Chantiers</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-          <input class="border rounded-xl p-3" placeholder="Nom chantier" [(ngModel)]="name" />
-          <input class="border rounded-xl p-3" placeholder="Adresse" [(ngModel)]="address" />
-          <button class="border rounded-xl p-3" (click)="create()">Créer chantier</button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-gray-100 p-4 rounded-xl">
+          <input class="border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="Nom du chantier" [(ngModel)]="name" />
+          <input class="border rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="Adresse" [(ngModel)]="address" />
+          <button class="bg-blue-600 text-white font-semibold rounded-xl p-3 hover:bg-blue-700 transition"
+                  (click)="create()">Créer chantier</button>
         </div>
 
-        <div class="flex gap-2 mb-4">
-          <button class="rounded-xl p-3 border" (click)="load()">Rafraîchir</button>
-          <a class="rounded-xl p-3 border inline-block" routerLink="/">Retour</a>
-        </div>
+        <div *ngIf="msg" class="p-3 mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">{{ msg }}</div>
+        <div *ngIf="err" class="p-3 mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">{{ err }}</div>
 
-        <p *ngIf="msg" class="text-sm text-green-700 mb-3">{{ msg }}</p>
-        <p *ngIf="err" class="text-sm text-red-600 mb-3">{{ err }}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Worksites -->
-          <div class="border rounded-xl p-4">
-            <h2 class="font-semibold mb-2">Chantiers</h2>
+          <div class="border rounded-xl p-4 bg-gray-50">
+            <h2 class="font-bold text-lg mb-4">🏗️ Chantiers</h2>
+            <div class="space-y-3">
+              <div *ngFor="let w of worksites"
+                   class="bg-white border rounded-xl p-3 shadow-sm"
+                   [class.border-blue-500]="selectedWorksite?.id === w.id">
+                <div class="font-semibold">{{ w.name }}</div>
+                <div class="text-sm text-gray-500">{{ w.address }}</div>
+                <div class="flex gap-2 mt-3">
+                  <button class="flex-1 text-sm border rounded-lg py-1 px-2"
+                          [class.bg-blue-600]="selectedWorksite?.id === w.id"
+                          [class.text-white]="selectedWorksite?.id === w.id"
+                          (click)="selectWorksite(w)">
+                    {{ selectedWorksite?.id === w.id ? 'Sélectionné' : 'Sélectionner' }}
+                  </button>
+                  <button class="text-sm text-red-500 border rounded-lg py-1 px-2" (click)="delWorksite(w.id)">Suppr.</button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <div *ngFor="let w of worksites" class="border rounded-xl p-3 mb-2">
-              <div class="font-semibold">{{ w.name }}</div>
-              <div class="text-sm opacity-70">{{ w.address || '-' }}</div>
-              <div class="text-xs break-all mt-1">id: {{ w.id }}</div>
+          <div class="border rounded-xl p-4 bg-gray-50">
+            <h2 class="font-bold text-lg mb-4">👥 Assignés</h2>
+            <div *ngIf="!selectedWorksite" class="text-gray-400 italic text-sm">Sélectionnez un chantier...</div>
+            <div class="space-y-2">
+              <div *ngFor="let a of assignments" class="bg-white p-3 rounded-lg border text-sm">
+                <b>{{ employeeName(a.userId) }}</b>
+                <div class="text-xs text-gray-500">{{ employeeEmail(a.userId) }}</div>
+                <button (click)="unassign(a.userId)" class="text-red-500 text-xs mt-2 underline">Retirer</button>
+              </div>
+            </div>
+          </div>
 
-              <div class="flex gap-2 mt-2">
-                <button class="border rounded-lg px-2 py-1" (click)="selectWorksite(w)">
-                  {{ selectedWorksite?.id === w.id ? 'Sélectionné' : 'Sélectionner' }}
+          <div class="border rounded-xl p-4 bg-gray-50">
+            <h2 class="font-bold text-lg mb-4">📈 Activité</h2>
+            <div *ngIf="!selectedWorksite" class="text-gray-400 italic text-sm">Aucun chantier...</div>
+            <div class="space-y-2">
+              <div *ngFor="let it of adminTimelineItems" class="bg-white p-2 rounded border text-xs">
+                <span class="font-bold">{{ it.kind }}</span> - {{ it.at | date:'shortTime' }}
+                <div class="mt-1">{{ employeeName(it.userId) }}</div>
+                <div class="italic text-blue-600" *ngIf="it.note">{{ it.note }} ({{it.percent}}%)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border rounded-xl p-4 bg-gray-50">
+            <h2 class="font-bold text-lg mb-4">➕ Ajouter</h2>
+            <div class="space-y-2">
+              <div *ngFor="let e of employees" class="bg-white p-3 rounded-lg border text-sm">
+                <div>{{ e.username }}</div>
+                <button [disabled]="!selectedWorksite || isAssigned(e.id)"
+                        (click)="assign(e.id)"
+                        class="w-full mt-2 text-xs py-1 rounded border"
+                        [class.bg-green-50]="!isAssigned(e.id)">
+                  {{ isAssigned(e.id) ? 'Déjà présent' : 'Ajouter' }}
                 </button>
-                <button class="border rounded-lg px-2 py-1" (click)="delWorksite(w.id)">
-                  Supprimer
-                </button>
               </div>
             </div>
           </div>
 
-          <!-- Assigned employees -->
-          <div class="border rounded-xl p-4">
-            <h2 class="font-semibold mb-2">Employés assignés</h2>
-
-            <div class="text-sm mb-3" *ngIf="selectedWorksite">
-              Chantier: <b>{{ selectedWorksite.name }}</b>
-            </div>
-
-            <div *ngIf="!selectedWorksite" class="text-sm opacity-70">
-              Sélectionne un chantier pour voir les affectations.
-            </div>
-
-            <div *ngIf="selectedWorksite && assignments.length === 0" class="text-sm opacity-70">
-              Aucun employé assigné.
-            </div>
-
-            <div *ngFor="let a of assignments" class="border rounded-xl p-3 mb-2">
-              <div class="font-semibold">
-                {{ employeeName(a.userId) }}
-              </div>
-              <div class="text-sm opacity-70">
-                {{ employeeEmail(a.userId) }}
-              </div>
-              <div class="text-xs opacity-70">Assigné le: {{ a.assignedAt | date: 'medium' }}</div>
-              <div class="text-xs break-all mt-1">userId: {{ a.userId }}</div>
-
-              <button class="border rounded-lg px-2 py-1 mt-2" (click)="unassign(a.userId)">
-                Retirer
-              </button>
-            </div>
-          </div>
-
-          <div class="border rounded-xl p-4">
-            <h2 class="font-semibold mb-2">Avancement / Timeline (Admin)</h2>
-
-            <div *ngIf="!selectedWorksite" class="text-sm opacity-70">Sélectionne un chantier.</div>
-
-            <div
-              *ngIf="selectedWorksite && adminTimelineItems.length === 0"
-              class="text-sm opacity-70"
-            >
-              Aucun événement.
-            </div>
-
-            <div *ngFor="let it of adminTimelineItems" class="border rounded-xl p-3 mb-2">
-              <div class="font-semibold">
-                {{ it.kind }}
-                <span class="text-sm opacity-70">— {{ it.at | date: 'medium' }}</span>
-              </div>
-
-              <div class="text-sm opacity-70">
-                {{ employeeName(it.userId) }} — {{ employeeEmail(it.userId) }}
-              </div>
-
-              <div class="text-sm mt-1" *ngIf="it.kind === 'PROGRESS'">
-                {{ it.note }}
-                <span *ngIf="it.percent !== null && it.percent !== undefined">
-                  ({{ it.percent }}%)</span
-                >
-              </div>
-
-              <div class="text-xs break-all mt-1">userId: {{ it.userId }}</div>
-            </div>
-          </div>
-
-          <!-- Assign employees -->
-          <div class="border rounded-xl p-4">
-            <h2 class="font-semibold mb-2">Assigner un employé</h2>
-
-            <div *ngIf="!selectedWorksite" class="text-sm opacity-70 mb-2">
-              Sélectionne un chantier d’abord.
-            </div>
-
-            <div *ngFor="let e of employees" class="border rounded-xl p-3 mb-2">
-              <div class="font-semibold">{{ e.username }}</div>
-              <div class="text-sm opacity-70">{{ e.email }}</div>
-              <div class="text-xs break-all mt-1">id: {{ e.id }}</div>
-
-              <button
-                class="border rounded-lg px-2 py-1 mt-2"
-                [disabled]="!selectedWorksite || isAssigned(e.id)"
-                (click)="assign(e.id)"
-              >
-                {{ isAssigned(e.id) ? 'Déjà assigné' : 'Assigner' }}
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   `,
 })
-export class AdminWorksitesComponent {
+export class AdminWorksitesComponent implements OnInit {
   worksites: Worksite[] = [];
   employees: EmployeeDto[] = [];
   adminTimelineItems: TimelineItem[] = [];
   employeesById = new Map<string, EmployeeDto>();
-
   selectedWorksite: Worksite | null = null;
   assignments: Assignment[] = [];
 
@@ -160,85 +112,84 @@ export class AdminWorksitesComponent {
   constructor(
     private ws: WorksiteService,
     private auth: AuthService,
+    private cdr: ChangeDetectorRef // Ajouté pour forcer le rafraîchissement
   ) {}
 
   ngOnInit() {
-    this.load();
+    this.loadAllInitialData();
   }
 
-  load() {
-    this.msg = '';
-    this.err = '';
-
-    this.ws.adminListWorksites().subscribe({
-      next: (res) => (this.worksites = res),
-      error: () => (this.err = 'Erreur chargement chantiers'),
-    });
-
-    this.auth.adminListEmployees().subscribe({
-      next: (res: any) => {
-        this.employees = res;
+  // Utilisation de forkJoin pour être sûr que TOUT arrive en même temps au chargement
+  loadAllInitialData() {
+    forkJoin({
+      worksites: this.ws.adminListWorksites(),
+      employees: this.auth.adminListEmployees()
+    }).subscribe({
+      next: (data: any) => {
+        this.worksites = data.worksites;
+        this.employees = data.employees;
         this.employeesById = new Map(this.employees.map((e) => [e.id, e]));
+        this.cdr.detectChanges(); // Force Angular à dessiner la liste
       },
-      error: () => (this.err = 'Erreur chargement employés'),
-    });
-
-    // si un chantier est déjà sélectionné, refresh ses affectations
-    if (this.selectedWorksite) {
-      this.refreshAssignments();
-    }
-  }
-
-  create() {
-    this.msg = '';
-    this.err = '';
-    this.ws.adminCreateWorksite(this.name, this.address).subscribe({
-      next: (res) => {
-        this.msg = `Chantier créé: ${res.id}`;
-        this.name = '';
-        this.address = '';
-        this.load();
-      },
-      error: (e) => (this.err = e?.status === 403 ? 'ADMIN requis' : 'Erreur création'),
-    });
-  }
-
-  delWorksite(id: string) {
-    this.msg = '';
-    this.err = '';
-    this.ws.adminDeleteWorksite(id).subscribe({
-      next: () => {
-        if (this.selectedWorksite?.id === id) {
-          this.selectedWorksite = null;
-          this.assignments = [];
-        }
-        this.msg = 'Chantier supprimé';
-        this.load();
-      },
-      error: () => (this.err = 'Erreur suppression'),
+      error: () => (this.err = 'Erreur lors du chargement initial')
     });
   }
 
   selectWorksite(w: Worksite) {
+    // 1. On assigne immédiatement
     this.selectedWorksite = w;
-    this.msg = `Chantier sélectionné: ${w.name}`;
-    this.refreshAssignments();
-    this.refreshAdminTimeline();
+    this.assignments = []; // On vide pour l'effet visuel de chargement
+    this.adminTimelineItems = [];
+
+    // 2. On déclenche le chargement des données liées
+    this.refreshWorksiteDetails(w.id);
   }
 
-  refreshAssignments() {
-    if (!this.selectedWorksite) return;
-    this.ws.adminListAssignments(this.selectedWorksite.id).subscribe({
-      next: (res) => (this.assignments = res),
-      error: () => (this.err = 'Erreur chargement affectations'),
+  refreshWorksiteDetails(worksiteId: string) {
+    // On lance les deux appels en parallèle
+    forkJoin({
+      assigns: this.ws.adminListAssignments(worksiteId),
+      timeline: this.ws.adminTimeline(worksiteId)
+    }).subscribe({
+      next: (res: any) => {
+        this.assignments = res.assigns;
+        this.adminTimelineItems = res.timeline ?? [];
+        this.cdr.detectChanges(); // Force la mise à jour de l'UI
+      },
+      error: () => (this.err = 'Erreur chargement des détails du chantier')
     });
   }
 
-  refreshAdminTimeline() {
+  // --- ACTIONS ---
+
+  create() {
+    if (!this.name.trim()) return;
+    this.ws.adminCreateWorksite(this.name, this.address).subscribe(() => {
+      this.msg = 'Chantier créé';
+      this.name = ''; this.address = '';
+      this.loadAllInitialData();
+    });
+  }
+
+  assign(userId: string) {
     if (!this.selectedWorksite) return;
-    this.ws.adminTimeline(this.selectedWorksite.id).subscribe({
-      next: (res) => (this.adminTimelineItems = res ?? []),
-      error: () => (this.err = 'Erreur chargement timeline admin'),
+    this.ws.adminAssign(this.selectedWorksite.id, userId).subscribe(() => {
+      this.refreshWorksiteDetails(this.selectedWorksite!.id);
+    });
+  }
+
+  unassign(userId: string) {
+    if (!this.selectedWorksite) return;
+    this.ws.adminUnassign(this.selectedWorksite.id, userId).subscribe(() => {
+      this.refreshWorksiteDetails(this.selectedWorksite!.id);
+    });
+  }
+
+  delWorksite(id: string) {
+    if (!confirm('Supprimer ?')) return;
+    this.ws.adminDeleteWorksite(id).subscribe(() => {
+      this.selectedWorksite = null;
+      this.loadAllInitialData();
     });
   }
 
@@ -246,36 +197,8 @@ export class AdminWorksitesComponent {
     return this.assignments.some((a) => a.userId === userId);
   }
 
-  assign(userId: string) {
-    if (!this.selectedWorksite) return;
-    this.msg = '';
-    this.err = '';
-    this.ws.adminAssign(this.selectedWorksite.id, userId).subscribe({
-      next: () => {
-        this.msg = 'Employé assigné';
-        this.refreshAssignments();
-        this.refreshAdminTimeline();
-      },
-      error: (e) => (this.err = e?.status === 403 ? 'ADMIN requis' : 'Erreur assignation'),
-    });
-  }
-
-  unassign(userId: string) {
-    if (!this.selectedWorksite) return;
-    this.msg = '';
-    this.err = '';
-    this.ws.adminUnassign(this.selectedWorksite.id, userId).subscribe({
-      next: () => {
-        this.msg = 'Employé retiré';
-        this.refreshAssignments();
-        this.refreshAdminTimeline();
-      },
-      error: (e) => (this.err = e?.status === 403 ? 'ADMIN requis' : 'Erreur retrait'),
-    });
-  }
-
   employeeName(userId: string): string {
-    return this.employeesById.get(userId)?.username ?? '(Utilisateur inconnu)';
+    return this.employeesById.get(userId)?.username ?? 'Inconnu';
   }
 
   employeeEmail(userId: string): string {
