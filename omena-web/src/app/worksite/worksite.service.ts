@@ -61,5 +61,9 @@ myWorksites() {
   return this.http.get<Worksite[]>(`${this.baseUrl}/api/my-worksites`);
 }
 
+adminTimeline(worksiteId: string) {
+  return this.http.get<TimelineItem[]>(`${this.baseUrl}/admin/worksites/${worksiteId}/timeline`);
+}
+
 
 }
