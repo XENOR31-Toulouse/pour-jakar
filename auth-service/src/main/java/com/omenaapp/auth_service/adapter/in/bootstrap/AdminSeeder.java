@@ -8,9 +8,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.omenaapp.auth_service.application.port.out.PasswordHasherPort;
-import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
-import com.omenaapp.auth_service.domain.User;
+import com.omenaapp.auth_service.domain.port.out.PasswordHasherPort;
+import com.omenaapp.auth_service.domain.port.out.UserRepositoryPort;
+import com.omenaapp.auth_service.domain.model.User;
 
 @Component
 public class AdminSeeder implements CommandLineRunner {

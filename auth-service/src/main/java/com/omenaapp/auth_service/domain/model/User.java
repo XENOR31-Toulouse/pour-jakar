@@ -1,4 +1,4 @@
-package com.omenaapp.auth_service.domain;
+package com.omenaapp.auth_service.domain.model;
 
 import java.time.Instant;
 import java.util.UUID;

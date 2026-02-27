@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.auth_service.application.port.out.TokenHasherPort;
+import com.omenaapp.auth_service.domain.port.out.TokenHasherPort;
 
 
 @Component

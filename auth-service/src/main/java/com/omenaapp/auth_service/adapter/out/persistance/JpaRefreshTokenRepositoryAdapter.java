@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
-import com.omenaapp.auth_service.application.port.out.RefreshTokenRepositoryPort;
+import com.omenaapp.auth_service.domain.port.out.RefreshTokenRepositoryPort;
 
 @Repository
 public class JpaRefreshTokenRepositoryAdapter implements RefreshTokenRepositoryPort {

@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
-import com.omenaapp.auth_service.application.port.out.PasswordResetTokenRepositoryPort;
+import com.omenaapp.auth_service.domain.port.out.PasswordResetTokenRepositoryPort;
 
 @Repository
 public class JpaPasswordResetTokenRepositoryAdapter implements PasswordResetTokenRepositoryPort {

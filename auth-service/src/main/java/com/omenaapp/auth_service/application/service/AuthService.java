@@ -1,12 +1,9 @@
-package com.omenaapp.auth_service.application.port;
+package com.omenaapp.auth_service.application.service;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.omenaapp.auth_service.application.port.in.AdminCreateUserUseCase;
 import com.omenaapp.auth_service.application.port.in.LoginUseCase;
@@ -15,16 +12,16 @@ import com.omenaapp.auth_service.application.port.in.RefreshUseCase;
 import com.omenaapp.auth_service.application.port.in.RegisterUserUseCase;
 import com.omenaapp.auth_service.application.port.in.RequestPasswordResetUseCase;
 import com.omenaapp.auth_service.application.port.in.ResetPasswordUseCase;
-import com.omenaapp.auth_service.application.port.out.PasswordHasherPort;
-import com.omenaapp.auth_service.application.port.out.PasswordResetNotifierPort;
-import com.omenaapp.auth_service.application.port.out.PasswordResetTokenRepositoryPort;
-import com.omenaapp.auth_service.application.port.out.RefreshTokenRepositoryPort;
-import com.omenaapp.auth_service.application.port.out.TokenHasherPort;
-import com.omenaapp.auth_service.application.port.out.TokenIssuerPort;
-import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
-import com.omenaapp.auth_service.domain.User;
+import com.omenaapp.auth_service.domain.port.out.PasswordHasherPort;
+import com.omenaapp.auth_service.domain.port.out.PasswordResetNotifierPort;
+import com.omenaapp.auth_service.domain.port.out.PasswordResetTokenRepositoryPort;
+import com.omenaapp.auth_service.domain.port.out.RefreshTokenRepositoryPort;
+import com.omenaapp.auth_service.domain.port.out.TokenHasherPort;
+import com.omenaapp.auth_service.domain.port.out.TokenIssuerPort;
+import com.omenaapp.auth_service.domain.port.out.UserRepositoryPort;
+import com.omenaapp.auth_service.domain.model.User;
 
-@Service
+
 public class AuthService implements
         RegisterUserUseCase,
         LoginUseCase,
@@ -56,8 +53,8 @@ public class AuthService implements
             TokenHasherPort tokenHasher,
             PasswordResetTokenRepositoryPort resetTokens,
             PasswordResetNotifierPort resetNotifier,
-            @Value("${security-refresh.ttl-seconds:604800}") long refreshTtlSeconds,
-            @Value("${security-reset.ttl-seconds:900}") long resetTtlSeconds
+            long refreshTtlSeconds,
+            long resetTtlSeconds
     ) {
         this.users = users;
         this.hasher = hasher;
@@ -74,7 +71,7 @@ public class AuthService implements
     }
 
     @Override
-    @Transactional
+
     public UUID register(RegisterUserUseCase.Command cmd) {
         String email = normalizeEmail(cmd.email());
         String username = cmd.username() == null ? "" : cmd.username().trim();
@@ -106,7 +103,7 @@ public class AuthService implements
     }
 
     @Override
-    @Transactional
+
     public LoginUseCase.Result login(LoginUseCase.Command cmd) {
         String identifier = cmd.identifier() == null ? "" : cmd.identifier().trim();
         String password = cmd.password() == null ? "" : cmd.password();
@@ -126,7 +123,7 @@ public class AuthService implements
     }
 
     @Override
-    @Transactional
+
     public RefreshUseCase.Result refresh(RefreshUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
         if (rawRefresh.isEmpty()) {
@@ -149,7 +146,7 @@ public class AuthService implements
     }
 
     @Override
-    @Transactional
+
     public void logout(LogoutUseCase.Command cmd) {
         String rawRefresh = cmd.refreshToken() == null ? "" : cmd.refreshToken().trim();
         if (rawRefresh.isEmpty()) {
@@ -165,7 +162,7 @@ public class AuthService implements
 
     // ---- Reset Password ----
     @Override
-    @Transactional
+
     public void request(RequestPasswordResetUseCase.Command cmd) {
         String email = normalizeEmail(cmd.email());
         if (email.isEmpty()) {
@@ -202,7 +199,7 @@ public class AuthService implements
     }
 
     @Override
-    @Transactional
+
     public UUID create(AdminCreateUserUseCase.Command cmd) {
         String email = normalizeEmail(cmd.email());
         String username = cmd.username() == null ? "" : cmd.username().trim();
@@ -229,12 +226,12 @@ public class AuthService implements
         String hash = hasher.hash(password);
 
         // ✅ user normal
-        users.save(new com.omenaapp.auth_service.domain.User(id, email, username, hash, java.time.Instant.now(), false));
+        users.save(new com.omenaapp.auth_service.domain.model.User(id, email, username, hash, java.time.Instant.now(), false));
         return id;
     }
 
     @Override
-    @Transactional
+
     public void reset(ResetPasswordUseCase.Command cmd) {
         String raw = cmd.token() == null ? "" : cmd.token().trim();
         String newPwd = cmd.newPassword() == null ? "" : cmd.newPassword();

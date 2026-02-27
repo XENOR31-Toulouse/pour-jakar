@@ -1,4 +1,4 @@
-package com.omenaapp.auth_service.application.port.out;
+package com.omenaapp.auth_service.domain.port.out;
 
 public interface PasswordHasherPort {
   String hash(String rawPassword);

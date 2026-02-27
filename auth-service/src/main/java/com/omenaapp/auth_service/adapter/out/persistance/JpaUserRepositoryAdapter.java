@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
-import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
-import com.omenaapp.auth_service.domain.User;
+import com.omenaapp.auth_service.domain.port.out.UserRepositoryPort;
+import com.omenaapp.auth_service.domain.model.User;
 
 @Repository
 public class JpaUserRepositoryAdapter implements UserRepositoryPort {

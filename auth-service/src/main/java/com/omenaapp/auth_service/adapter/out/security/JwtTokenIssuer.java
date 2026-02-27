@@ -12,7 +12,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.auth_service.application.port.out.TokenIssuerPort;
+import com.omenaapp.auth_service.domain.port.out.TokenIssuerPort;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

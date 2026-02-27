@@ -2,7 +2,7 @@
 
 // import org.springframework.stereotype.Component;
 
-// import com.omenaapp.auth_service.application.port.out.PasswordResetNotifierPort;
+// import com.omenaapp.auth_service.domain.port.out.PasswordResetNotifierPort;
 
 
 // @Component

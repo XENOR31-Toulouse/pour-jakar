@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.omenaapp.auth_service.application.port.out.PasswordHasherPort;
-import com.omenaapp.auth_service.application.port.out.UserRepositoryPort;
-import com.omenaapp.auth_service.domain.User;
+import com.omenaapp.auth_service.domain.port.out.PasswordHasherPort;
+import com.omenaapp.auth_service.domain.port.out.UserRepositoryPort;
+import com.omenaapp.auth_service.domain.model.User;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
