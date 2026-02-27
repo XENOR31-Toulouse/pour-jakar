@@ -10,19 +10,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.omenaapp.worksite_service.domain.ProgressUpdateRepo;
-import com.omenaapp.worksite_service.domain.WorkEventRepo;
+import com.omenaapp.worksite_service.application.service.WorksiteActivityService;
 
 @RestController
 @RequestMapping("/admin/worksites")
 public class AdminTimelineController {
 
-  private final WorkEventRepo events;
-  private final ProgressUpdateRepo progress;
+  private final WorksiteActivityService service;
 
-  public AdminTimelineController(WorkEventRepo events, ProgressUpdateRepo progress) {
-    this.events = events;
-    this.progress = progress;
+  public AdminTimelineController(WorksiteActivityService service) {
+    this.service = service;
   }
 
   public record TimelineItem(
@@ -35,16 +32,8 @@ public class AdminTimelineController {
 
   @GetMapping("/{worksiteId}/timeline")
   public List<TimelineItem> timeline(@PathVariable UUID worksiteId) {
-
-    var e = events.findByWorksiteId(worksiteId).stream()
-        .map(x -> new TimelineItem(x.getType().name(), x.getUserId(), x.getOccurredAt(), null, null))
-        .toList();
-
-    var p = progress.findByWorksiteId(worksiteId).stream()
-        .map(x -> new TimelineItem("PROGRESS", x.getUserId(), x.getCreatedAt(), x.getNote(), x.getPercent()))
-        .toList();
-
-    return java.util.stream.Stream.concat(e.stream(), p.stream())
+    return service.adminTimeline(worksiteId).stream()
+        .map(x -> new TimelineItem(x.kind(), x.userId(), x.at(), x.note(), x.percent()))
         .sorted(Comparator.comparing(TimelineItem::at).reversed())
         .toList();
   }

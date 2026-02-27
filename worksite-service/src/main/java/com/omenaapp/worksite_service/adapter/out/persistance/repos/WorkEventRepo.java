@@ -1,4 +1,4 @@
-package com.omenaapp.worksite_service.domain;
+package com.omenaapp.worksite_service.adapter.out.persistance.repos;
 
 import java.util.List;
 import java.util.UUID;

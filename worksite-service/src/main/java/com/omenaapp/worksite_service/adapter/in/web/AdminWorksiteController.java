@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.omenaapp.worksite_service.adapter.out.persistance.AssignmentEntity;
 import com.omenaapp.worksite_service.adapter.out.persistance.WorksiteEntity;
-import com.omenaapp.worksite_service.domain.AssignmentRepo;
-import com.omenaapp.worksite_service.domain.WorksiteRepo;
+import com.omenaapp.worksite_service.adapter.out.persistance.repos.AssignmentRepo;
+import com.omenaapp.worksite_service.adapter.out.persistance.repos.WorksiteRepo;
 
 
 
