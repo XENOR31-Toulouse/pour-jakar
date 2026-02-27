@@ -1,13 +1,14 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.adapter;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.ProgressUpdateRepo;
+import com.omenaapp.worksite_service.adapter.out.persistence.repository.ProgressUpdateRepo;
 import com.omenaapp.worksite_service.domain.model.ProgressUpdate;
 import com.omenaapp.worksite_service.domain.port.out.ProgressUpdateRepositoryPort;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.ProgressUpdateEntity;
 
 @Component
 public class ProgressUpdatePersistenceAdapter implements ProgressUpdateRepositoryPort {

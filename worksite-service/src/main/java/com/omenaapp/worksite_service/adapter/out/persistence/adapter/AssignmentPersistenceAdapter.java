@@ -1,13 +1,14 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.adapter;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.AssignmentRepo;
+import com.omenaapp.worksite_service.adapter.out.persistence.repository.AssignmentRepo;
 import com.omenaapp.worksite_service.domain.model.Assignment;
 import com.omenaapp.worksite_service.domain.port.out.AssignmentRepositoryPort;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.AssignmentEntity;
 
 @Component
 public class AssignmentPersistenceAdapter implements AssignmentRepositoryPort {

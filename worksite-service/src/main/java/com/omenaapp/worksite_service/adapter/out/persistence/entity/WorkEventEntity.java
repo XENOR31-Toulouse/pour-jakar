@@ -1,6 +1,7 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.entity;
 
 import java.time.Instant;
+import com.omenaapp.worksite_service.domain.model.WorkEventType;
 import java.util.UUID;
 
 import jakarta.persistence.Column;

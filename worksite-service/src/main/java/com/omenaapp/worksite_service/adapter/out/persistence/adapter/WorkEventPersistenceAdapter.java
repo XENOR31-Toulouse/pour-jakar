@@ -1,14 +1,15 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.adapter;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.WorkEventRepo;
+import com.omenaapp.worksite_service.adapter.out.persistence.repository.WorkEventRepo;
 import com.omenaapp.worksite_service.domain.model.WorkEvent;
 import com.omenaapp.worksite_service.domain.model.WorkEventType;
 import com.omenaapp.worksite_service.domain.port.out.WorkEventRepositoryPort;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.WorkEventEntity;
 
 @Component
 public class WorkEventPersistenceAdapter implements WorkEventRepositoryPort {
@@ -40,6 +41,6 @@ public class WorkEventPersistenceAdapter implements WorkEventRepositoryPort {
     }
 
     private static WorkEventEntity toEntity(WorkEvent d) {
-        return new WorkEventEntity(d.id(), d.worksiteId(), d.userId(), com.omenaapp.worksite_service.adapter.out.persistance.WorkEventType.valueOf(d.type().name()), d.occurredAt());
+        return new WorkEventEntity(d.id(), d.worksiteId(), d.userId(), WorkEventType.valueOf(d.type().name()), d.occurredAt());
     }
 }

@@ -1,11 +1,11 @@
-package com.omenaapp.worksite_service.adapter.out.persistance.repos;
+package com.omenaapp.worksite_service.adapter.out.persistence.repository;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.ProgressUpdateEntity;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.ProgressUpdateEntity;
 
 public interface ProgressUpdateRepo extends JpaRepository<ProgressUpdateEntity, UUID> {
   List<ProgressUpdateEntity> findByWorksiteId(UUID worksiteId);

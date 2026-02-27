@@ -1,11 +1,11 @@
-package com.omenaapp.worksite_service.adapter.out.persistance.repos;
+package com.omenaapp.worksite_service.adapter.out.persistence.repository;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.WorkEventEntity;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.WorkEventEntity;
 
 public interface WorkEventRepo extends JpaRepository<WorkEventEntity, UUID> {
   List<WorkEventEntity> findByWorksiteId(UUID worksiteId);

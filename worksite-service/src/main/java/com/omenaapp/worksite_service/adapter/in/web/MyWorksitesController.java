@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.AssignmentRepo;
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.WorksiteRepo;
+import com.omenaapp.worksite_service.application.service.MyWorksitesService;
 
 
 
@@ -17,12 +16,10 @@ import com.omenaapp.worksite_service.adapter.out.persistance.repos.WorksiteRepo;
 @RequestMapping("/api")
 public class MyWorksitesController {
 
-  private final AssignmentRepo assignments;
-  private final WorksiteRepo worksites;
+  private final MyWorksitesService service;
 
-  public MyWorksitesController(AssignmentRepo assignments, WorksiteRepo worksites) {
-    this.assignments = assignments;
-    this.worksites = worksites;
+  public MyWorksitesController(MyWorksitesService service) {
+    this.service = service;
   }
 
   public record WorksiteDto(UUID id, String name, String address) {}
@@ -32,10 +29,8 @@ public class MyWorksitesController {
     String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     UUID userId = UUID.fromString(principal);
 
-    return assignments.findByUserId(userId).stream()
-      .map(a -> worksites.findById(a.getWorksiteId()).orElse(null))
-      .filter(ws -> ws != null)
-      .map(ws -> new WorksiteDto(ws.getId(), ws.getName(), ws.getAddress()))
+    return service.listMyWorksites(userId).stream()
+      .map(ws -> new WorksiteDto(ws.id(), ws.name(), ws.address()))
       .toList();
   }
 }

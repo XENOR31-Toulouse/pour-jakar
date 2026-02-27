@@ -1,4 +1,4 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.entity;
 
 import java.time.Instant;
 import java.util.UUID;

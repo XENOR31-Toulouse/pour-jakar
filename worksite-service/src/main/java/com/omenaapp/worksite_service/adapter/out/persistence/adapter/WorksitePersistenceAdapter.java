@@ -1,4 +1,4 @@
-package com.omenaapp.worksite_service.adapter.out.persistance;
+package com.omenaapp.worksite_service.adapter.out.persistence.adapter;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,9 +6,10 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.omenaapp.worksite_service.adapter.out.persistance.repos.WorksiteRepo;
+import com.omenaapp.worksite_service.adapter.out.persistence.repository.WorksiteRepo;
 import com.omenaapp.worksite_service.domain.model.Worksite;
 import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.WorksiteEntity;
 
 @Component
 public class WorksitePersistenceAdapter implements WorksiteRepositoryPort {
