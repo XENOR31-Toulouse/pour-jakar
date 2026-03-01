@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main", "master"]
+
+jobs:
+  changes:
+    name: Detect changed projects
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      worksite: ${{ steps.filter.outputs.worksite }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            auth:
+              - 'auth-service/**'
+              - '.github/workflows/**'
+              - 'docker-compose.yml'
+            worksite:
+              - 'worksite-service/**'
+              - '.github/workflows/**'
+              - 'docker-compose.yml'
+            web:
+              - 'omena-web/**'
+              - '.github/workflows/**'
+              - 'docker-compose.yml'
+
+  auth-service:
+    name: auth-service (mvn test)
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build & test
+        working-directory: auth-service
+        run: mvn -B test
+
+  worksite-service:
+    name: worksite-service (mvn test)
+    needs: changes
+    if: needs.changes.outputs.worksite == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build & test
+        working-directory: worksite-service
+        run: mvn -B test
+
+  omena-web:
+    name: omena-web (npm test + build)
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: omena-web/package-lock.json
+
+      - name: Install
+        working-directory: omena-web
+        run: npm ci
+
+      - name: Test
+        working-directory: omena-web
+        run: npm test -- --watch=false
+
+      - name: Build
+        working-directory: omena-web
+        run: npm run build
