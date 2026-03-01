@@ -23,8 +23,7 @@ describe('authInterceptor', () => {
             routerMock ??
             ({
               navigateByUrl: () => Promise.resolve(true),
-              parseUrl: (u: string) => ({ url: u }),
-            } as Partial<Router>),
+            } as unknown as Partial<Router>),
         },
       ],
     });
