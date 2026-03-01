@@ -5,6 +5,7 @@ import { authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 describe('authInterceptor', () => {
   let http: HttpClient;
@@ -16,7 +17,15 @@ describe('authInterceptor', () => {
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authMock },
-        { provide: Router, useValue: routerMock ?? { navigateByUrl: () => Promise.resolve(true), parseUrl: (u: string) => ({ url: u }) } },
+        {
+          provide: Router,
+          useValue:
+            routerMock ??
+            ({
+              navigateByUrl: () => Promise.resolve(true),
+              parseUrl: (u: string) => ({ url: u }),
+            } as Partial<Router>),
+        },
       ],
     });
 
@@ -29,7 +38,11 @@ describe('authInterceptor', () => {
   });
 
   it('adds Authorization header when token exists', () => {
-    setup({ getToken: () => 'AT', getRefreshToken: () => 'RT', refresh: () => of({ accessToken: 'AT', refreshToken: 'RT' }) });
+    setup({
+      getToken: () => 'AT',
+      getRefreshToken: () => 'RT',
+      refresh: () => of({ accessToken: 'AT', refreshToken: 'RT' }),
+    });
 
     http.get('/api/site/admin/worksites').subscribe();
 
@@ -80,8 +93,9 @@ describe('authInterceptor', () => {
     // should not retry
   });
 
-  it('on 401 without refresh token: logout + navigate to /login', async () => {
-    const navigateByUrl = jasmine.createSpy('navigateByUrl').and.returnValue(Promise.resolve(true));
+  it('on 401 without refresh token: logout + navigate to /login', () => {
+    const navigateByUrl = vi.fn().mockResolvedValue(true);
+
     const auth = {
       getToken: () => 'AT',
       getRefreshToken: () => null,
@@ -99,7 +113,8 @@ describe('authInterceptor', () => {
   });
 
   it('if refresh fails: logout + navigate to /login', () => {
-    const navigateByUrl = jasmine.createSpy('navigateByUrl').and.returnValue(Promise.resolve(true));
+    const navigateByUrl = vi.fn().mockResolvedValue(true);
+
     const auth = {
       getToken: () => 'AT',
       getRefreshToken: () => 'RT',
