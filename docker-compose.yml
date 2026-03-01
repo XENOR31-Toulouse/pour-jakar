@@ -1,0 +1,99 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: src/main/resources/docker/Dockerfile
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL}
+      JWT_ISSUER: ${JWT_ISSUER}
+
+      REFRESH_TTL: ${REFRESH_TTL}
+      RESET_TTL: ${RESET_TTL}
+
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+
+      FRONT_BASE_URL: ${FRONT_BASE_URL}
+
+      SEED_ADMIN_ENABLED: ${SEED_ADMIN_ENABLED}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+
+    ports:
+      - "${AUTH_SERVICE_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worksite-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${WORKSITE_DB}
+      POSTGRES_USER: ${WORKSITE_USER}
+      POSTGRES_PASSWORD: ${WORKSITE_PASSWORD}
+    ports:
+      - "${WORKSITE_DB_PORT}:5432"
+    volumes:
+      - worksite_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WORKSITE_USER} -d ${WORKSITE_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  worksite-service:
+    build:
+      context: ./worksite-service
+      dockerfile: src/main/resources/docker/Dockerfile
+    environment:
+      DB_HOST: worksite-db
+      DB_PORT: 5432
+      DB_NAME: ${WORKSITE_DB}
+      DB_USER: ${WORKSITE_USER}
+      DB_PASSWORD: ${WORKSITE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${WORKSITE_SERVICE_PORT}:8080"
+    depends_on:
+      worksite-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  omena-web:
+    build:
+      context: ./omena-web
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONT_PORT}:80"
+    depends_on:
+      - auth-service
+
+volumes:
+  auth_db_data:
+  worksite_db_data:

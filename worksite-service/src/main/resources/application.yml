@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:worksitedb}
+    username: ${DB_USER:worksite}
+    password: ${DB_PASSWORD:worksite}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-me-please-change-me-please-32chars-min}
