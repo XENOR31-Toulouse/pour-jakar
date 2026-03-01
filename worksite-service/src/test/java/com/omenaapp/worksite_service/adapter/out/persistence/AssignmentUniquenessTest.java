@@ -21,7 +21,7 @@ import com.omenaapp.worksite_service.domain.model.Worksite;
 
 @Testcontainers
 @SpringBootTest
-class AssignmentUniquenessIT {
+class AssignmentUniquenessTest {
 
   @Container
   static final PostgreSQLContainer<?> postgres =
