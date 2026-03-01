@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { AuthService } from './auth.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { AuthService } from './auth.service';
 
 function b64url(obj: unknown): string {
   const json = JSON.stringify(obj);
@@ -32,6 +32,7 @@ describe('AuthService', () => {
 
     const req = httpMock.expectOne('/api/auth/auth/login');
     expect(req.request.method).toBe('POST');
+
     req.flush({ accessToken: 'AT', refreshToken: 'RT' });
 
     expect(localStorage.getItem('accessToken')).toBe('AT');
@@ -66,6 +67,7 @@ describe('AuthService', () => {
     const req = httpMock.expectOne('/api/auth/logout');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ refreshToken: 'RT' });
+
     req.flush({});
   });
 
@@ -83,10 +85,11 @@ describe('AuthService', () => {
     expect(service.getUserId()).toBe('abc-123');
   });
 
-  it('isLoggedIn is true when token exists', () => {
-    expect(service.isLoggedIn()).toBeFalse();
+  it('isLoggedIn is false when no token, true when token exists', () => {
+    expect(service.isLoggedIn()).toBe(false);
+
     localStorage.setItem('accessToken', 'AT');
-    expect(service.isLoggedIn()).toBeTrue();
+    expect(service.isLoggedIn()).toBe(true);
   });
 
   it('adminCreateEmployee posts payload to correct endpoint', () => {
@@ -95,6 +98,7 @@ describe('AuthService', () => {
     const req = httpMock.expectOne('/api/auth/admin/users/employees');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ email: 'a@b.com', username: 'bob', password: 'pw' });
+
     req.flush({ userId: '1' });
   });
 });
