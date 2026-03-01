@@ -27,3 +27,4 @@ com.omenaapp.worksite_service
 * Domain + application layers are framework-agnostic.
 * Persistence is isolated behind outbound ports.
 * Spring is used for wiring (DI) and for the inbound HTTP adapter.
+test
