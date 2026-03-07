@@ -35,7 +35,7 @@ public class JpaUserRepositoryAdapter implements UserRepositoryPort {
 
   @Override
   public List<User> findEmployees() {
-    return jpa.findByIsAdminFalse().stream()
+    return jpa.findAll().stream()
         .map(this::toDomain)
         .toList();
   }

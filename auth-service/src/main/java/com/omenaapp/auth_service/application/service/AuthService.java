@@ -226,7 +226,7 @@ public class AuthService implements
         String hash = hasher.hash(password);
 
         // ✅ user normal
-        users.save(new com.omenaapp.auth_service.domain.model.User(id, email, username, hash, java.time.Instant.now(), false));
+        users.save(new com.omenaapp.auth_service.domain.model.User(id, email, username, hash, java.time.Instant.now(), cmd.isAdmin()));
         return id;
     }
 

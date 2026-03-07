@@ -33,8 +33,8 @@ adminListEmployees() {
   return this.http.get<EmployeeDto[]>(`/api/auth/admin/users/employees`);
 }
 
-adminCreateEmployee(email: string, username: string, password: string) {
-  return this.http.post<{ userId: string }>(`/api/auth/admin/users/employees`, { email, username, password });
+adminCreateEmployee(email: string, username: string, password: string, isAdmin: boolean) {
+  return this.http.post<{ userId: string }>(`/api/auth/admin/users/employees`, { email, username, password, isAdmin });
 }
 
 adminDeleteEmployee(id: string) {
@@ -59,8 +59,8 @@ resetPassword(token: string, newPassword: string) {
   return this.http.post(`/api/auth/password/reset`, { token, newPassword });
 }
 
-adminCreateUser(email: string, username: string, password: string) {
-  return this.http.post<{ userId: string }>(`/api/admin/users`, { email, username, password });
+adminCreateUser(email: string, username: string, password: string, isAdmin: boolean) {
+  return this.http.post<{ userId: string }>(`/api/admin/users`, { email, username, password, isAdmin });
 }
 
 
