@@ -54,6 +54,11 @@ import { AuthService } from '../../../../core/auth/auth.service';
                 [(ngModel)]="password" />
               <p class="text-[10px] text-gray-400 mt-2 ml-1 italic">Minimum 8 caractères conseillés.</p>
             </div>
+
+            <div class="flex items-center gap-3 p-3">
+              <input type="checkbox" id="is-admin" class="h-5 w-5 rounded-md" [(ngModel)]="isAdmin" />
+              <label for="is-admin" class="text-sm font-bold text-gray-600">Attribuer les privilèges ADMIN ?</label>
+            </div>
           </div>
 
           <div class="pt-4 space-y-3">
@@ -79,6 +84,7 @@ export class AdminCreateUserComponent {
   email = '';
   username = '';
   password = '';
+  isAdmin = false;
   msg = '';
   err = '';
 
@@ -94,13 +100,14 @@ export class AdminCreateUserComponent {
       return;
     }
 
-    this.auth.adminCreateUser(this.email, this.username, this.password).subscribe({
+    this.auth.adminCreateUser(this.email, this.username, this.password, this.isAdmin).subscribe({
       next: (res) => {
         this.msg = `L'utilisateur ${this.username} a été créé avec succès (ID: ${res.userId})`;
         // Reset des champs après succès
         this.email = '';
         this.username = '';
         this.password = '';
+        this.isAdmin = false;
       },
       error: (e) => {
         const status = e?.status;

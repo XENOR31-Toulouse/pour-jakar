@@ -218,9 +218,26 @@ class AuthServiceTest {
         when(users.findByEmail("a@b.com")).thenReturn(Optional.empty());
         when(users.findByUsername("john")).thenReturn(Optional.empty());
 
-        UUID id = service.create(new AdminCreateUserUseCase.Command("a@b.com", "john", "password123"));
+        UUID id = service.create(new AdminCreateUserUseCase.Command("a@b.com", "john", "password123", false));
         assertNotNull(id);
 
-        verify(users).save(any(User.class));
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(captor.capture());
+        User saved = captor.getValue();
+        assertFalse(saved.isAdmin());
+    }
+
+    @Test
+    void adminCreate_asAdmin_savesAdminUser() {
+        when(users.findByEmail("a@b.com")).thenReturn(Optional.empty());
+        when(users.findByUsername("john")).thenReturn(Optional.empty());
+
+        UUID id = service.create(new AdminCreateUserUseCase.Command("a@b.com", "john", "password123", true));
+        assertNotNull(id);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(users).save(captor.capture());
+        User saved = captor.getValue();
+        assertTrue(saved.isAdmin());
     }
 }

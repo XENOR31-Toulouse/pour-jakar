@@ -50,6 +50,10 @@ type EmployeeDto = { id: string; email: string; username: string; createdAt: str
               </button>
             </div>
           </div>
+          <div class="flex items-center gap-3 p-3">
+            <input type="checkbox" id="is-admin-quick-add" class="h-5 w-5 rounded-md" [(ngModel)]="isAdmin" />
+            <label for="is-admin-quick-add" class="text-sm font-bold text-gray-600">Attribuer les privilèges ADMIN ?</label>
+          </div>
           <div *ngIf="msg" class="mt-4 p-3 bg-green-50 border border-green-100 text-green-700 rounded-xl text-xs font-bold animate-fade-in">✅ {{ msg }}</div>
           <div *ngIf="err" class="mt-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs font-bold animate-fade-in">⚠️ {{ err }}</div>
         </div>
@@ -108,6 +112,7 @@ export class AdminEmployeesComponent implements OnInit {
   email = '';
   username = '';
   password = '';
+  isAdmin = false;
   msg = '';
   err = '';
   isLoading = false;
@@ -150,12 +155,13 @@ export class AdminEmployeesComponent implements OnInit {
     this.msg = '';
     this.err = '';
 
-    this.auth.adminCreateEmployee(this.email, this.username, this.password).subscribe({
+    this.auth.adminCreateEmployee(this.email, this.username, this.password, this.isAdmin).subscribe({
       next: () => {
         this.msg = `Le collaborateur ${this.username} a été ajouté.`;
         this.email = '';
         this.username = '';
         this.password = '';
+        this.isAdmin = false;
         // 🔥 Rechargement immédiat
         this.load();
         this.clearMsg();
@@ -199,3 +205,4 @@ export class AdminEmployeesComponent implements OnInit {
     }, 3000);
   }
 }
+

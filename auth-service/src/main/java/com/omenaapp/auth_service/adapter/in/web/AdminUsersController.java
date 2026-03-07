@@ -41,6 +41,7 @@ public class AdminUsersController {
     @NotBlank @Email public String email;
     @NotBlank public String username;
     @NotBlank public String password;
+    public boolean isAdmin;
   }
 
   // ---- LIST employees (non-admin) ----
@@ -72,7 +73,7 @@ public class AdminUsersController {
     String hash = hasher.hash(password);
 
     // ✅ employee = isAdmin false
-    users.save(new User(id, email, username, hash, Instant.now(), false));
+    users.save(new User(id, email, username, hash, Instant.now(), req.isAdmin));
 
     return ResponseEntity.ok(new CreateUserResponse(id));
   }
