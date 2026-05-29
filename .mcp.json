@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+        "filesystem": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-filesystem", "E:/omenaapp"]
+        },
+        "shell": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-shell"]
+        },
+        "maven-assistant": {
+            "command": "docker",
+            "args": ["run", "-i", "--rm", "-v", "E:/omenaapp:/app", "mcp/maven-server"]
+        }
+    }
+}
