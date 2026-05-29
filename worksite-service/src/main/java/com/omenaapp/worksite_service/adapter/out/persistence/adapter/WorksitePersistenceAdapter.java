@@ -3,31 +3,37 @@ package com.omenaapp.worksite_service.adapter.out.persistence.adapter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.ClientEntity;
+import com.omenaapp.worksite_service.adapter.out.persistence.entity.WorksiteEntity;
+import com.omenaapp.worksite_service.adapter.out.persistence.repository.ClientRepo;
 import com.omenaapp.worksite_service.adapter.out.persistence.repository.WorksiteRepo;
 import com.omenaapp.worksite_service.domain.model.Worksite;
 import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
-import com.omenaapp.worksite_service.adapter.out.persistence.entity.WorksiteEntity;
 
 @Component
 public class WorksitePersistenceAdapter implements WorksiteRepositoryPort {
-
     private final WorksiteRepo repo;
-
-    public WorksitePersistenceAdapter(WorksiteRepo repo) {
+    private final ClientRepo clientRepo;
+    
+    public WorksitePersistenceAdapter(WorksiteRepo repo, ClientRepo clientRepo) {
         this.repo = repo;
+        this.clientRepo = clientRepo;
     }
 
     @Override
     public List<Worksite> findAll() {
-        return repo.findAll().stream().map(WorksitePersistenceAdapter::toDomain).toList();
+        return repo.findAll().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Worksite> findById(UUID id) {
-        return repo.findById(id).map(WorksitePersistenceAdapter::toDomain);
+        return repo.findById(id).map(this::toDomain);
     }
 
     @Override
@@ -37,20 +43,45 @@ public class WorksitePersistenceAdapter implements WorksiteRepositoryPort {
 
     @Override
     public Worksite save(Worksite worksite) {
-        var saved = repo.save(toEntity(worksite));
-        return toDomain(saved);
+        WorksiteEntity entity = toEntity(worksite);
+        WorksiteEntity savedEntity = repo.save(entity);
+        return toDomain(savedEntity);
     }
 
     @Override
     public void deleteById(UUID id) {
         repo.deleteById(id);
     }
-
-    private static Worksite toDomain(WorksiteEntity e) {
-        return new Worksite(e.getId(), e.getName(), e.getAddress(), e.getCreatedAt());
+    
+    // Méthode pour attribuer un client à un worksite
+    public Worksite assignClientToWorksite(UUID worksiteId, UUID clientId) {
+        WorksiteEntity worksiteEntity = repo.findById(worksiteId)
+                .orElseThrow(() -> new RuntimeException("Worksite not found with id: " + worksiteId));
+        
+        ClientEntity clientEntity = clientRepo.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("Client not found with id: " + clientId));
+        
+        worksiteEntity.setClient(clientEntity);
+        WorksiteEntity savedEntity = repo.save(worksiteEntity);
+        return toDomain(savedEntity);
     }
-
-    private static WorksiteEntity toEntity(Worksite d) {
-        return new WorksiteEntity(d.id(), d.name(), d.address(), d.createdAt());
+    
+    private Worksite toDomain(WorksiteEntity entity) {
+        return new Worksite(
+                entity.getId(),
+                entity.getName(),
+                entity.getAddress(),
+                entity.getCreatedAt()
+        );
+    }
+    
+    private WorksiteEntity toEntity(Worksite worksite) {
+        WorksiteEntity entity = new WorksiteEntity(
+                worksite.id(),
+                worksite.name(),
+                worksite.address(),
+                worksite.createdAt()
+        );
+        return entity;
     }
 }

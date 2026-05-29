@@ -1,20 +1,17 @@
 package com.omenaapp.worksite_service.application.service;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
-import com.omenaapp.worksite_service.domain.model.Assignment;
+import org.springframework.stereotype.Service;
+
 import com.omenaapp.worksite_service.domain.model.Worksite;
 import com.omenaapp.worksite_service.domain.port.out.AssignmentRepositoryPort;
 import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
-
 /**
- * Application service (use-cases) for admin operations.
- * No Spring annotations here: wired in infrastructure config.
+ * Admin use-cases for worksite creation, update, deletion.
  */
+@Service
 public class AdminWorksiteService {
-
     private final WorksiteRepositoryPort worksites;
     private final AssignmentRepositoryPort assignments;
 
@@ -23,42 +20,35 @@ public class AdminWorksiteService {
         this.assignments = assignments;
     }
 
-    public List<Worksite> listWorksites() {
-        return worksites.findAll();
+    public Worksite createWorksite(Worksite worksite) {
+        return worksites.save(worksite);
     }
 
-    public UUID createWorksite(String name, String address) {
-        if (name == null || name.trim().length() < 2) {
-            throw new IllegalArgumentException("INVALID_NAME");
+    public Worksite updateWorksite(UUID id, Worksite worksite) {
+        // Check if worksite exists
+        if (!worksites.existsById(id)) {
+            throw new RuntimeException("Worksite not found with id: " + id);
         }
-        UUID id = UUID.randomUUID();
-        worksites.save(new Worksite(id, name.trim(), address, Instant.now()));
-        return id;
+        // Update the worksite
+        return worksites.save(worksite);
     }
 
     public void deleteWorksite(UUID id) {
-        if (!worksites.existsById(id)) {
-            throw new IllegalArgumentException("WORKSITE_NOT_FOUND");
-        }
         worksites.deleteById(id);
     }
 
-    public void assignUser(UUID worksiteId, UUID userId) {
-        if (!worksites.existsById(worksiteId)) {
-            throw new IllegalArgumentException("WORKSITE_NOT_FOUND");
+    // Nouvelle méthode pour attribuer un client à un worksite
+    public Worksite assignClientToWorksite(UUID worksiteId, UUID clientId) {
+        // Vérifier que le worksite existe
+        var worksiteOpt = worksites.findById(worksiteId);
+        if (worksiteOpt.isEmpty()) {
+            throw new RuntimeException("Worksite not found with id: " + worksiteId);
         }
-        // Best-effort: ignore duplicates.
-        try {
-            assignments.save(new Assignment(UUID.randomUUID(), worksiteId, userId, Instant.now()));
-        } catch (Exception ignored) {
-        }
-    }
 
-    public void unassignUser(UUID worksiteId, UUID userId) {
-        assignments.deleteByWorksiteIdAndUserId(worksiteId, userId);
-    }
-
-    public List<Assignment> listAssignments(UUID worksiteId) {
-        return assignments.findByWorksiteId(worksiteId);
+        // Ici, nous devons implémenter la logique pour attribuer un client
+        // Pour l'instant, nous allons simplement retourner le worksite mis à jour
+        // La logique complète sera implémentée dans l'adapter persistence
+        return worksiteOpt.get();
     }
 }
+
