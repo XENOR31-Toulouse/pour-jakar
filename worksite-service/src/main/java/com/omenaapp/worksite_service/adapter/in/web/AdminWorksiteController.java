@@ -41,7 +41,7 @@ public class AdminWorksiteController {
   @PostMapping
   public ResponseEntity<CreateRes> create(@RequestBody CreateReq req) {
     try {
-      UUID id = service.createWorksite(req.name(), req.address());
+      UUID id = service.createWorksite(req.name(), req.address()).id();
       return ResponseEntity.ok(new CreateRes(id));
     } catch (IllegalArgumentException ex) {
       return ResponseEntity.badRequest().build();
