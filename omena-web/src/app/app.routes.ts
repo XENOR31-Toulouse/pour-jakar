@@ -17,6 +17,9 @@ import { AdminWorksitesComponent } from './features/admin/pages/worksites/admin-
 import { WorksiteDetailComponent } from './features/worksites/pages/worksite-detail/worksite-detail.component';
 import { MyWorksitesComponent } from './features/worksites/pages/my-worksites/user-worksite.component';
 
+import { ClientListComponent } from './features/clients/pages/client-list/client-list.component';
+import { ClientCreateComponent } from './features/clients/pages/client-create/client-create.component';
+
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
@@ -30,6 +33,8 @@ export const routes: Routes = [
   },
   { path: 'worksites/:id', component: WorksiteDetailComponent, canActivate: [authGuard] },
   { path: 'my-worksites', component: MyWorksitesComponent, canActivate: [authGuard] },
+  { path: 'clients', component: ClientListComponent, canActivate: [authGuard] },
+  { path: 'clients/create', component: ClientCreateComponent, canActivate: [authGuard] },
 
 
 

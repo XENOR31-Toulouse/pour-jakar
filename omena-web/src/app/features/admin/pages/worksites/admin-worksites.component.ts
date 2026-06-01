@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { WorksiteService, Worksite, Assignment, TimelineItem } from '../../../worksites/data/worksite.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { forkJoin } from 'rxjs';
+import { ClientService } from '../../../clients/services/client.service';
+import { Client } from '../../../clients/models/client.model';
 
 type EmployeeDto = { id: string; email: string; username: string; createdAt: string };
 
@@ -148,6 +150,23 @@ type EmployeeDto = { id: string; email: string; username: string; createdAt: str
                 </button>
               </div>
             </div>
+
+            <h2 class="font-black text-xs uppercase tracking-widest text-gray-400 px-2">➕ Ajouter un client</h2>
+            <div class="bg-white border border-gray-100 shadow-sm rounded-3xl p-4 space-y-2 max-h-[300px] overflow-y-auto">
+              <div *ngFor="let c of clients" class="p-3 rounded-2xl border border-gray-50 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                <div class="font-bold text-xs truncate text-gray-800">{{ c.name }}</div>
+                <div class="text-[10px] text-gray-500 truncate">{{ c.email }}</div>
+                <button [disabled]="!selectedWorksite || isClientAssigned(c.id)"
+                        (click)="assignClient(c.id)"
+                        class="w-full mt-2 text-[10px] font-bold uppercase py-2 rounded-xl border transition-all shadow-sm"
+                        [class.bg-white]="!isClientAssigned(c.id)"
+                        [class.text-blue-600]="!isClientAssigned(c.id)"
+                        [class.bg-gray-100]="isClientAssigned(c.id)"
+                        [class.text-gray-400]="isClientAssigned(c.id)">
+                  {{ isClientAssigned(c.id) ? 'Déjà assigné' : 'Assigner' }}
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -162,6 +181,7 @@ export class AdminWorksitesComponent implements OnInit {
   employeesById = new Map<string, EmployeeDto>();
   selectedWorksite: Worksite | null = null;
   assignments: Assignment[] = [];
+  clients: Client[] = [];
 
   name = '';
   address = '';
@@ -171,6 +191,7 @@ export class AdminWorksitesComponent implements OnInit {
   constructor(
     public auth: AuthService, // public pour y accéder dans le template
     private ws: WorksiteService,
+    private clientService: ClientService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -187,9 +208,21 @@ export class AdminWorksitesComponent implements OnInit {
         this.worksites = data.worksites;
         this.employees = data.employees;
         this.employeesById = new Map(this.employees.map((e) => [e.id, e]));
+        this.loadClients();
         this.cdr.detectChanges();
       },
       error: () => (this.err = 'Erreur lors du chargement initial')
+    });
+  }
+
+  loadClients() {
+    this.clientService.getClients().subscribe({
+      next: (clients) => {
+        this.clients = clients;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des clients:', error);
+      }
     });
   }
 
@@ -247,6 +280,13 @@ export class AdminWorksitesComponent implements OnInit {
     });
   }
 
+  assignClient(clientId: string) {
+    if (!this.selectedWorksite) return;
+    this.ws.adminAssign(this.selectedWorksite.id, clientId).subscribe({
+      next: () => this.refreshWorksiteDetails(this.selectedWorksite!.id)
+    });
+  }
+
   unassign(userId: string) {
     if (!this.selectedWorksite) return;
     this.ws.adminUnassign(this.selectedWorksite.id, userId).subscribe({
@@ -272,6 +312,10 @@ export class AdminWorksitesComponent implements OnInit {
 
   isAssigned(userId: string): boolean {
     return this.assignments.some((a) => a.userId === userId);
+  }
+
+  isClientAssigned(clientId: string): boolean {
+    return this.assignments.some((a) => a.userId === clientId);
   }
 
   employeeName(userId: string): string {

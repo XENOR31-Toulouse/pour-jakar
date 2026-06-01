@@ -1,0 +1,25 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.form-control {
+  border-radius: 0.375rem;
+}
+
+.btn {
+  border-radius: 0.375rem;
+}
+
+.form-label {
+  font-weight: 600;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}

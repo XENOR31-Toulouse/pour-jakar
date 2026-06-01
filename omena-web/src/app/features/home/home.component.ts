@@ -91,8 +91,12 @@ import { AuthService } from '../../core/auth/auth.service';
                   <span>🏗️ Gestion Chantiers</span>
                   <span class="text-slate-500">→</span>
                 </button>
-                <button (click)="goAdminCreate()" class="w-full flex justify-between items-center p-3 rounded-xl hover:bg-white/10 transition-colors font-medium">
+                <button (click)="goAdminCreate()" class="w-full flex justify-between items-center p-3 rounded-xl hover:bg-white/10 transition-colors font-medium border-b border-white/5">
                   <span>➕ Créer Utilisateur</span>
+                  <span class="text-slate-500">→</span>
+                </button>
+                <button (click)="goClients()" class="w-full flex justify-between items-center p-3 rounded-xl hover:bg-white/10 transition-colors font-medium">
+                  <span>👥 Gestion Clients</span>
                   <span class="text-slate-500">→</span>
                 </button>
               </div>
@@ -131,6 +135,7 @@ export class HomeComponent {
   goAdminEmployees() { this.router.navigateByUrl('/admin/employees'); }
   goAdminWorksites() { this.router.navigateByUrl('/admin/worksites'); }
   goAdminCreate() { this.router.navigateByUrl('/admin/create-user'); }
+  goClients() { this.router.navigateByUrl('/clients'); }
 
   logout() {
     this.auth.logoutAndClear().subscribe({

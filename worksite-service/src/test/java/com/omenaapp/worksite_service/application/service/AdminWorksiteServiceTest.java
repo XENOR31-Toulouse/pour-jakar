@@ -1,34 +1,48 @@
 package com.omenaapp.worksite_service.application.service;
 
-import com.omenaapp.worksite_service.domain.model.Assignment;
-import com.omenaapp.worksite_service.domain.model.Worksite;
-import com.omenaapp.worksite_service.domain.port.out.AssignmentRepositoryPort;
-import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.omenaapp.worksite_service.domain.model.Assignment;
+import com.omenaapp.worksite_service.domain.model.Worksite;
+import com.omenaapp.worksite_service.domain.port.out.AssignmentRepositoryPort;
+import com.omenaapp.worksite_service.domain.port.out.ClientRepositoryPort;
+import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
 
 @ExtendWith(MockitoExtension.class)
 class AdminWorksiteServiceTest {
 
     private WorksiteRepositoryPort worksites;
     private AssignmentRepositoryPort assignments;
+    private ClientRepositoryPort clients;
     private AdminWorksiteService service;
 
     @BeforeEach
     void setUp() {
         worksites = mock(WorksiteRepositoryPort.class);
         assignments = mock(AssignmentRepositoryPort.class);
-        service = new AdminWorksiteService(worksites, assignments);
+        clients = mock(ClientRepositoryPort.class);
+        service = new AdminWorksiteService(worksites, assignments, clients);
     }
 
     @Test
@@ -43,7 +57,7 @@ class AdminWorksiteServiceTest {
 
         assertSame(expected, result);
         verify(worksites).findAll();
-        verifyNoMoreInteractions(worksites, assignments);
+        verifyNoMoreInteractions(worksites, assignments, clients);
     }
 
     @Test
@@ -56,7 +70,7 @@ class AdminWorksiteServiceTest {
                 () -> service.createWorksite("a", "x"));
         assertEquals("INVALID_NAME", ex2.getMessage());
 
-        verifyNoInteractions(worksites, assignments);
+        verifyNoInteractions(worksites, assignments, clients);
     }
 
     @Test
@@ -74,7 +88,7 @@ class AdminWorksiteServiceTest {
         assertEquals("3 rue de la place", saved.address());
         assertNotNull(saved.createdAt());
 
-        verifyNoMoreInteractions(worksites, assignments);
+        verifyNoMoreInteractions(worksites, assignments, clients);
     }
 
     @Test
@@ -89,7 +103,7 @@ class AdminWorksiteServiceTest {
         verify(worksites).existsById(id);
         verify(worksites, never()).deleteById(any());
         verifyNoMoreInteractions(worksites);
-        verifyNoInteractions(assignments);
+        verifyNoInteractions(assignments, clients);
     }
 
     @Test
@@ -102,7 +116,7 @@ class AdminWorksiteServiceTest {
         verify(worksites).existsById(id);
         verify(worksites).deleteById(id);
         verifyNoMoreInteractions(worksites);
-        verifyNoInteractions(assignments);
+        verifyNoInteractions(assignments, clients);
     }
 
     @Test
@@ -116,7 +130,7 @@ class AdminWorksiteServiceTest {
         assertEquals("WORKSITE_NOT_FOUND", ex.getMessage());
 
         verify(worksites).existsById(worksiteId);
-        verifyNoInteractions(assignments);
+        verifyNoInteractions(assignments, clients);
         verifyNoMoreInteractions(worksites);
     }
 
@@ -138,7 +152,7 @@ class AdminWorksiteServiceTest {
         assertNotNull(saved.assignedAt());
 
         verify(worksites).existsById(worksiteId);
-        verifyNoMoreInteractions(worksites, assignments);
+        verifyNoMoreInteractions(worksites, assignments, clients);
     }
 
     @Test
@@ -153,7 +167,7 @@ class AdminWorksiteServiceTest {
 
         verify(worksites).existsById(worksiteId);
         verify(assignments).save(any());
-        verifyNoMoreInteractions(worksites, assignments);
+        verifyNoMoreInteractions(worksites, assignments, clients);
     }
 
     @Test
@@ -164,7 +178,7 @@ class AdminWorksiteServiceTest {
         service.unassignUser(worksiteId, userId);
 
         verify(assignments).deleteByWorksiteIdAndUserId(worksiteId, userId);
-        verifyNoInteractions(worksites);
+        verifyNoInteractions(worksites, clients);
         verifyNoMoreInteractions(assignments);
     }
 
@@ -180,7 +194,7 @@ class AdminWorksiteServiceTest {
 
         assertSame(expected, result);
         verify(assignments).findByWorksiteId(worksiteId);
-        verifyNoInteractions(worksites);
+        verifyNoInteractions(worksites, clients);
         verifyNoMoreInteractions(assignments);
     }
 }

@@ -4,9 +4,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.omenaapp.worksite_service.application.service.AdminWorksiteService;
+import com.omenaapp.worksite_service.application.service.ClientService;
 import com.omenaapp.worksite_service.application.service.MyWorksitesService;
 import com.omenaapp.worksite_service.application.service.WorksiteActivityService;
 import com.omenaapp.worksite_service.domain.port.out.AssignmentRepositoryPort;
+import com.omenaapp.worksite_service.domain.port.out.ClientRepositoryPort;
 import com.omenaapp.worksite_service.domain.port.out.ProgressUpdateRepositoryPort;
 import com.omenaapp.worksite_service.domain.port.out.WorkEventRepositoryPort;
 import com.omenaapp.worksite_service.domain.port.out.WorksiteRepositoryPort;
@@ -17,9 +19,17 @@ public class ApplicationServicesConfig {
     @Bean
     AdminWorksiteService adminWorksiteService(
         WorksiteRepositoryPort worksites,
-        AssignmentRepositoryPort assignments
+        AssignmentRepositoryPort assignments,
+        ClientRepositoryPort clients
     ) {
-        return new AdminWorksiteService(worksites, assignments);
+        return new AdminWorksiteService(worksites, assignments, clients);
+    }
+
+    @Bean
+    ClientService clientService(
+        ClientRepositoryPort clients
+    ) {
+        return new ClientService(clients);
     }
 
     @Bean
