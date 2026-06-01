@@ -17,7 +17,7 @@ import com.omenaapp.worksite_service.application.service.ClientService;
 import com.omenaapp.worksite_service.domain.model.Client;
 
 @RestController
-@RequestMapping("/api/clients")
+@RequestMapping("/api/site/clients")
 public class ClientController {
     
     private final ClientService clientService;

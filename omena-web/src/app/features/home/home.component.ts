@@ -95,6 +95,10 @@ import { AuthService } from '../../core/auth/auth.service';
                   <span>➕ Créer Utilisateur</span>
                   <span class="text-slate-500">→</span>
                 </button>
+                <button (click)="goAdminClients()" class="w-full flex justify-between items-center p-3 rounded-xl hover:bg-white/10 transition-colors font-medium">
+                  <span>👔 Gestion Clients</span>
+                  <span class="text-slate-500">→</span>
+                </button>
               </div>
             </section>
 
@@ -131,6 +135,7 @@ export class HomeComponent {
   goAdminEmployees() { this.router.navigateByUrl('/admin/employees'); }
   goAdminWorksites() { this.router.navigateByUrl('/admin/worksites'); }
   goAdminCreate() { this.router.navigateByUrl('/admin/create-user'); }
+  goAdminClients() { this.router.navigateByUrl('/admin/clients'); }
 
   logout() {
     this.auth.logoutAndClear().subscribe({

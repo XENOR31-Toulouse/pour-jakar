@@ -57,10 +57,12 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "front-auth:build:production"
+              "buildTarget": "front-auth:build:production",
+              "proxyConfig": "proxy.conf.json"
             },
             "development": {
-              "buildTarget": "front-auth:build:development"
+              "buildTarget": "front-auth:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
@@ -72,3 +74,4 @@
     }
   }
 }
+
