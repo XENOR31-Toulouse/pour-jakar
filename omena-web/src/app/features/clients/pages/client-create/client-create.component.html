@@ -8,14 +8,14 @@
 
   <div class="card">
     <div class="card-body">
-      <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" novalidate>
+      <form (ngSubmit)="onSubmit()" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="name" class="form-label">Nom *</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="name" 
+            <input
+              type="text"
+              class="form-control"
+              id="name"
               formControlName="name"
               [class.is-invalid]="clientForm.get('name')?.touched && clientForm.get('name')?.invalid">
             <div class="invalid-feedback" *ngIf="clientForm.get('name')?.touched && clientForm.get('name')?.invalid">
@@ -26,10 +26,10 @@
 
           <div class="col-md-6 mb-3">
             <label for="email" class="form-label">Email *</label>
-            <input 
-              type="email" 
-              class="form-control" 
-              id="email" 
+            <input
+              type="email"
+              class="form-control"
+              id="email"
               formControlName="email"
               [class.is-invalid]="clientForm.get('email')?.touched && clientForm.get('email')?.invalid">
             <div class="invalid-feedback" *ngIf="clientForm.get('email')?.touched && clientForm.get('email')?.invalid">
@@ -40,10 +40,10 @@
 
           <div class="col-md-6 mb-3">
             <label for="phoneNumber" class="form-label">Téléphone *</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="phoneNumber" 
+            <input
+              type="text"
+              class="form-control"
+              id="phoneNumber"
               formControlName="phoneNumber"
               [class.is-invalid]="clientForm.get('phoneNumber')?.touched && clientForm.get('phoneNumber')?.invalid">
             <div class="invalid-feedback" *ngIf="clientForm.get('phoneNumber')?.touched && clientForm.get('phoneNumber')?.invalid">
@@ -54,24 +54,24 @@
 
           <div class="col-md-6 mb-3">
             <label for="address" class="form-label">Adresse</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="address" 
+            <input
+              type="text"
+              class="form-control"
+              id="address"
               formControlName="address">
           </div>
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
-          <button 
-            type="button" 
-            class="btn btn-outline-secondary" 
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
             routerLink="/clients">
             Annuler
           </button>
-          <button 
-            type="submit" 
-            class="btn btn-primary" 
+          <button
+            type="submit"
+            class="btn btn-primary"
             [disabled]="clientForm.invalid || isLoading">
             <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span *ngIf="isLoading" class="visually-hidden">Chargement...</span>
@@ -82,3 +82,4 @@
     </div>
   </div>
 </div>
+
